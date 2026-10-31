@@ -1,0 +1,56 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-typecheck-test:
+    name: Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm run lint
+
+      - name: Typecheck all workspaces
+        run: pnpm run typecheck
+
+      - name: Run Vitest Unit Tests
+        run: pnpm run test
+
+      - name: Build all workspaces
+        run: pnpm run build
+
+      - name: Install Playwright Browsers
+        run: pnpm --filter @bidding-kitchen/web exec playwright install --with-deps chromium
+
+      - name: Run Playwright E2E & Visual Verification
+        run: pnpm run test:e2e
+
+      - name: Upload Visual QA Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-qa-screenshots
+          path: docs/visual-qa/screenshots/phase-1/
+          if-no-files-found: ignore
