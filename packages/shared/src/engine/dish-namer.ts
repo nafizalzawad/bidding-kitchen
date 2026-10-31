@@ -18,10 +18,10 @@ export function generateDishName(items: (AwardedIngredient | Ingredient)[]): str
   const isWagyu = ids.has('street_patty_wagyu');
   const isSmash = ids.has('street_patty_smash');
   const isBrioche = ids.has('street_bun_brioche');
-  const isTruffle = ids.has('street_sauce_truffle_mayo');
+  const isTruffle = ids.has('street_sauce_truffle');
   const isBacon = ids.has('street_topping_bacon');
-  const isCrispyOnions = ids.has('street_topping_crispy_onions');
-  const isJalapeno = ids.has('street_topping_jalapenos');
+  const isCrispy = ids.has('street_patty_chicken');
+  const isJalapeno = ids.has('street_topping_jalapeno');
   const isBlueCheese = ids.has('street_cheese_blue');
   const isCheddar = ids.has('street_cheese_cheddar');
   const isAllBasic = ingredients.every((i) => i.isBasic);
@@ -42,7 +42,7 @@ export function generateDishName(items: (AwardedIngredient | Ingredient)[]): str
     return 'The Bacon Smash Royale';
   }
 
-  if (isJalapeno && ids.has('street_sauce_spicy_bbq')) {
+  if (isJalapeno && ids.has('street_sauce_spicy_mayo')) {
     return 'The Fiery Jalapeno Inferno';
   }
 
@@ -50,7 +50,7 @@ export function generateDishName(items: (AwardedIngredient | Ingredient)[]): str
     return 'The Smoky Blue Beast';
   }
 
-  if (isCrispyOnions && isSmash) {
+  if (isCrispy && isSmash) {
     return 'The Crispy Crunch Smash';
   }
 

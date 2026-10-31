@@ -217,7 +217,13 @@ export interface SubmitBidResult {
 export function submitBid(
   match: Match,
   playerId: string,
-  bidData: { roundIndex: number; ingredientId: string; amount: number; lockedAt?: number },
+  bidData: {
+    roundIndex: number;
+    ingredientId: string;
+    amount: number;
+    lockedAt?: number;
+    isAutoTimeoutBid?: boolean;
+  },
   now = 0,
 ): SubmitBidResult {
   const fullBid: Bid = {
@@ -226,7 +232,7 @@ export function submitBid(
     ingredientId: bidData.ingredientId,
     amount: bidData.amount,
     lockedAt: bidData.lockedAt ?? now,
-    isAutoTimeoutBid: false,
+    isAutoTimeoutBid: bidData.isAutoTimeoutBid ?? false,
   };
 
   const validation = validateBid(match, playerId, fullBid);
