@@ -9,7 +9,7 @@ import type {
 import type { GameError } from './errors.js';
 
 export type AckResponse<T = Record<string, never>> =
-  | ({ ok: true } & T)
+  | ({ ok: true } & (T extends Record<string, never> ? Record<string, unknown> : T))
   | { ok: false; error: GameError };
 
 export type TelemetryEventName =

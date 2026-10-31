@@ -11,6 +11,8 @@ import {
 import { MatchRoom, type MatchRoomOptions } from './match-room.js';
 import { sanitizeMatchForPlayer } from './state-sanitizer.js';
 
+export type RoomManagerOptions = MatchRoomOptions;
+
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 export class RoomManager {

@@ -7,7 +7,11 @@ import {
   type Match,
   type MatchConfig,
   type Result,
+  type ClientToServerEvents,
+  type ServerToClientEvents,
 } from '@bidding-kitchen/shared';
+import type { Server as SocketIOServer } from 'socket.io';
+import type { RoomManager } from './rooms/room-manager.js';
 
 export interface HealthResponse {
   status: 'ok';
@@ -32,7 +36,12 @@ export interface SimMatchResponse {
   result: Result;
 }
 
-export const healthRoutes: FastifyPluginAsync = async (fastify) => {
+export interface HealthRouteOptions {
+  roomManager?: RoomManager;
+  io?: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
+}
+
+export const healthRoutes: FastifyPluginAsync<HealthRouteOptions> = async (fastify, opts) => {
   // Verify engine once on route registration
   let engineVerified = false;
   try {
@@ -45,10 +54,11 @@ export const healthRoutes: FastifyPluginAsync = async (fastify) => {
   }
 
   fastify.get('/health', async (_request, reply) => {
+    const activeRooms = opts?.roomManager ? opts.roomManager.getActiveRoomsCount() : 0;
     const response: HealthResponse = {
       status: 'ok',
       version: '0.1.0',
-      activeRooms: 0,
+      activeRooms,
       sharedContractsLoaded: STREET_INGREDIENTS.length > 0,
       streetIngredientsCount: STREET_INGREDIENTS.length,
       engineVerified,

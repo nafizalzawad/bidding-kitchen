@@ -36,3 +36,6 @@
    - Disconnections trigger a 30,000ms (`RECONNECT_WINDOW_MS = 30000`) reconnect window.
    - If the player reconnects with valid `reconnectToken`, match state is synchronized seamlessly.
    - If the timer expires without reconnection, the remaining player wins by forfeit.
+
+7. **Socket Event AckResponse TypeScript Definition**:
+   - `AckResponse<T = Record<string, never>>`: In modern TypeScript, strict intersection `({ ok: true } & Record<string, never>)` evaluates property `ok` to `true & never` = `never` because `Record<string, never>` specifies no properties may exist. To preserve the default zero-parameter signature `AckResponse` across event callbacks while accepting empty payload `{ ok: true }`, the type is refined conditionally: `({ ok: true } & (T extends Record<string, never> ? Record<string, unknown> : T)) | { ok: false; error: GameError }`.

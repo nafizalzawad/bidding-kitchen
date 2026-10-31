@@ -26,7 +26,7 @@ export const JoinRoomPayloadSchema = z.object({
 
 export const ReconnectPayloadSchema = z.object({
   roomCode: RoomCodeSchema,
-  playerId: z.string().uuid(),
+  playerId: z.string().min(1),
   reconnectToken: z.string().min(1),
 });
 
