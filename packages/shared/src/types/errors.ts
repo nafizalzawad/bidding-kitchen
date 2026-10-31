@@ -1,0 +1,20 @@
+export type ErrorCode =
+  | 'INVALID_NICKNAME'
+  | 'ROOM_NOT_FOUND'
+  | 'ROOM_FULL'
+  | 'UNAUTHORIZED_RECONNECT'
+  | 'INVALID_STATE_ACTION'
+  | 'TIER_MISMATCH'
+  | 'INVALID_ROUND_INDEX'
+  | 'INVALID_INGREDIENT'
+  | 'BID_BELOW_BASE_PRICE'
+  | 'BID_EXCEEDS_BUDGET'
+  | 'BID_NOT_INTEGER'
+  | 'BID_ALREADY_LOCKED'
+  | 'RATE_LIMITED'
+  | 'ROOM_EXPIRED';
+
+export interface GameError {
+  code: ErrorCode;
+  message: string;
+}
