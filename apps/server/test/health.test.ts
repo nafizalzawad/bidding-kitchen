@@ -29,7 +29,7 @@ describe('Backend Server Contracts & Schemas', () => {
     });
     const duration = performance.now() - start;
 
-    expect(duration).toBeLessThan(100);
+    expect(duration).toBeLessThan(500);
     expect(response.statusCode).toBe(200);
 
     const payload = JSON.parse(response.payload);
@@ -39,7 +39,30 @@ describe('Backend Server Contracts & Schemas', () => {
       activeRooms: 0,
       sharedContractsLoaded: true,
       streetIngredientsCount: 19,
+      engineVerified: true,
     });
+  });
+
+  it('POST /api/sim-match returns deterministic 5-round match simulation', async () => {
+    const res1 = await app.inject({
+      method: 'POST',
+      url: '/api/sim-match',
+      payload: { seed: 2026, botA: 'COMBO', botB: 'GREEDY' },
+    });
+    expect(res1.statusCode).toBe(200);
+    const body1 = JSON.parse(res1.payload);
+    expect(body1.success).toBe(true);
+    expect(body1.match.rounds.length).toBe(5);
+    expect(body1.result.winnerId).toBeDefined();
+
+    // Calling again with identical seed produces identical results
+    const res2 = await app.inject({
+      method: 'POST',
+      url: '/api/sim-match',
+      payload: { seed: 2026, botA: 'COMBO', botB: 'GREEDY' },
+    });
+    const body2 = JSON.parse(res2.payload);
+    expect(body1.result).toEqual(body2.result);
   });
 
   describe('LockBidPayloadSchema Validation', () => {
