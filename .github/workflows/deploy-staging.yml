@@ -1,0 +1,48 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build Containers & Verify Health
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Compose Images
+        run: docker compose build
+
+      - name: Start Services in Detached Mode
+        run: docker compose up -d
+
+      - name: Wait for Server Healthcheck
+        run: |
+          for i in {1..30}; do
+            STATUS=$(docker inspect --format='{{json .State.Health.Status}}' $(docker compose ps -q server) || echo '"unknown"')
+            echo "Server health status: $STATUS"
+            if [ "$STATUS" = '"healthy"' ]; then
+              echo "Server is healthy!"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Query Server Health Endpoint
+        run: |
+          curl -f http://localhost:3001/health || exit 1
+
+      - name: Query Server Metrics Endpoint
+        run: |
+          curl -f http://localhost:3001/metrics || exit 1
+
+      - name: Tear Down Services
+        if: always()
+        run: docker compose down
