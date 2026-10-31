@@ -8,8 +8,9 @@ import {
 } from '@bidding-kitchen/shared';
 import { TagPill } from './components/ui/TagPill.js';
 import { FLAVOR_TAG_META } from './tokens/design-tokens.js';
-import { RefreshCw, Coins, Sparkles, Layers, ShieldCheck, Flame, Cpu, FileCheck } from 'lucide-react';
+import { RefreshCw, Coins, Sparkles, Layers, ShieldCheck, Flame, Cpu, FileCheck, Zap } from 'lucide-react';
 import { EngineSandboxPanel } from './components/game/EngineSandboxPanel.js';
+import { DualClientInspector } from './components/game/DualClientInspector.js';
 
 interface HealthData {
   status: string;
@@ -20,8 +21,12 @@ interface HealthData {
   engineVerified?: boolean;
 }
 
-export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'SANDBOX' | 'CONTRACTS'>('SANDBOX');
+export interface AppProps {
+  defaultTab?: 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS';
+}
+
+export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
+  const [activeTab, setActiveTab] = useState<'INSPECTOR' | 'SANDBOX' | 'CONTRACTS'>(defaultTab);
   const [healthStatus, setHealthStatus] = useState<'online' | 'offline (standalone preview)'>('offline (standalone preview)');
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,7 +80,11 @@ export const App: React.FC = () => {
               >
                 Bidding Kitchen
                 <span className="text-xs uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FFB703] text-[#1E1B18] border-2 border-[#1E1B18] font-bold shadow-[2px_2px_0px_#1E1B18]">
-                  {activeTab === 'SANDBOX' ? 'Phase 2: Engine Sandbox' : 'Phase 1: Contracts Swatch'}
+                  {activeTab === 'INSPECTOR'
+                    ? 'Phase 3: Live Dual-Client Inspector'
+                    : activeTab === 'SANDBOX'
+                    ? 'Phase 2: Engine Sandbox'
+                    : 'Phase 1: Contracts Swatch'}
                 </span>
               </h1>
               <p className="text-sm text-[#57514A] font-medium mt-1">
@@ -120,11 +129,24 @@ export const App: React.FC = () => {
       </header>
 
       {/* Primary Navigation Tabs */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+        <button
+          data-testid="tab-live-inspector"
+          onClick={() => setActiveTab('INSPECTOR')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#1E1B18] text-sm font-bold transition shadow-[0_3px_0_#1E1B18] cursor-pointer shrink-0 ${
+            activeTab === 'INSPECTOR'
+              ? 'bg-[#1E1B18] text-[#FFFDF7]'
+              : 'bg-[#FFFFFF] text-[#1E1B18] hover:bg-[#F4EFE2]'
+          }`}
+        >
+          <Zap className="w-4 h-4 text-[#FFB703]" />
+          <span>Live Dual-Client Inspector</span>
+        </button>
+
         <button
           data-testid="tab-engine-sandbox"
           onClick={() => setActiveTab('SANDBOX')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#1E1B18] text-sm font-bold transition shadow-[0_3px_0_#1E1B18] cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#1E1B18] text-sm font-bold transition shadow-[0_3px_0_#1E1B18] cursor-pointer shrink-0 ${
             activeTab === 'SANDBOX'
               ? 'bg-[#1E1B18] text-[#FFFDF7]'
               : 'bg-[#FFFFFF] text-[#1E1B18] hover:bg-[#F4EFE2]'
@@ -137,7 +159,7 @@ export const App: React.FC = () => {
         <button
           data-testid="tab-contract-diagnostics"
           onClick={() => setActiveTab('CONTRACTS')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#1E1B18] text-sm font-bold transition shadow-[0_3px_0_#1E1B18] cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#1E1B18] text-sm font-bold transition shadow-[0_3px_0_#1E1B18] cursor-pointer shrink-0 ${
             activeTab === 'CONTRACTS'
               ? 'bg-[#1E1B18] text-[#FFFDF7]'
               : 'bg-[#FFFFFF] text-[#1E1B18] hover:bg-[#F4EFE2]'
@@ -148,7 +170,9 @@ export const App: React.FC = () => {
         </button>
       </div>
 
-      {activeTab === 'SANDBOX' ? (
+      {activeTab === 'INSPECTOR' ? (
+        <DualClientInspector />
+      ) : activeTab === 'SANDBOX' ? (
         <EngineSandboxPanel />
       ) : (
         <main className="space-y-8">

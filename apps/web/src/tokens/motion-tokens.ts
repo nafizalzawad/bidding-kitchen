@@ -90,3 +90,41 @@ export function getTransitionConfig(key: MotionKey, prefersReducedMotion: boolea
       };
   }
 }
+
+/**
+ * Timer urgency thresholds and state mapping for bidding countdown
+ */
+export const TIMER_URGENCY_THRESHOLDS_MS = {
+  CALM: 5000,
+  WARNING: 3000,
+  CRITICAL: 1000,
+} as const;
+
+export type TimerUrgencyState = 'calm' | 'warning' | 'critical';
+
+export function getTimerUrgencyState(remainingMs: number): TimerUrgencyState {
+  if (remainingMs <= TIMER_URGENCY_THRESHOLDS_MS.CRITICAL) {
+    return 'critical';
+  }
+  if (remainingMs <= TIMER_URGENCY_THRESHOLDS_MS.WARNING) {
+    return 'warning';
+  }
+  return 'calm';
+}
+
+/**
+ * Framer-motion configuration for the 30-second disconnect/reconnect countdown banner
+ */
+export const CONNECTION_BANNER_MOTION = {
+  initial: { opacity: 0, y: -20 },
+  animate: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 25 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.2 } },
+  pulse: {
+    scale: [1, 1.02, 1],
+    transition: { repeat: Infinity, duration: 1.2 },
+  },
+  urgentShake: {
+    x: [0, -3, 3, -3, 3, 0],
+    transition: { repeat: Infinity, duration: 0.4 },
+  },
+} as const;

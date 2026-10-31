@@ -22,16 +22,18 @@ describe('App Component (Phase 2 Engine Sandbox & Contract Diagnostic)', () => {
     } as Response);
   });
 
-  it('renders heading, app title and Engine Sandbox inspector by default', async () => {
+  it('renders heading, app title and Live Dual-Client Inspector by default', async () => {
     render(<App />);
     expect(screen.getByTestId('app-title')).toBeInTheDocument();
-    expect(screen.getByTestId('sim-seed-input')).toBeInTheDocument();
-    expect(screen.getByTestId('btn-simulate-match')).toBeInTheDocument();
-    expect(screen.getByTestId('match-winner-badge')).toBeInTheDocument();
+    expect(screen.getByTestId('tab-live-inspector')).toBeInTheDocument();
+    expect(screen.getByTestId('hidden-info-proof-badge')).toBeInTheDocument();
+    expect(screen.getByTestId('inspector-quick-start-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('client-a-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('client-b-panel')).toBeInTheDocument();
   });
 
   it('allows simulating deterministic matches and switching presets in Engine Sandbox', async () => {
-    render(<App />);
+    render(<App defaultTab="SANDBOX" />);
     const simButton = screen.getByTestId('btn-simulate-match');
     fireEvent.click(simButton);
     expect(screen.getByTestId('match-winner-badge')).toBeInTheDocument();

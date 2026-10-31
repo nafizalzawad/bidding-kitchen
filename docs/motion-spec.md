@@ -59,4 +59,26 @@ Numerical count-up interpolation helper:
 ```typescript
 export function interpolateCountUp(current: number, target: number, progress: number): number;
 ```
+
+---
+
+## 5. Phase 3 Timer Urgency & Reconnection Motion
+
+```typescript
+export const TIMER_URGENCY_THRESHOLDS_MS = {
+  CALM: 5000,
+  WARNING: 3000,
+  CRITICAL: 1000,
+} as const;
+
+export type TimerUrgencyState = 'calm' | 'warning' | 'critical';
+
+export function getTimerUrgencyState(remainingMs: number): TimerUrgencyState;
+```
+
+### Connection Banner Motion (`CONNECTION_BANNER_MOTION`)
+- **Slide In**: Springs down from `translateY(-20px)` to `0` with spring `stiffness: 400, damping: 25`.
+- **Pulse**: Warning amber pulse `scale: [1, 1.02, 1]` over 1.2s.
+- **Urgent Shake**: Triggered on `remainingMs < 5000ms`, alternating horizontal micro-shakes (`[-3px, 3px]`) over 400ms cycles.
+- **Exit**: Slides up with 200ms linear fade.
 Calculates clamped linear interpolation for real-time React counter displays.
