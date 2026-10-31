@@ -363,3 +363,113 @@ export function forfeitMatch(match: Match, forfeitingPlayerId: string, now = 0):
     result,
   };
 }
+
+/**
+ * Resets match state for a post-match rematch:
+ * Swaps player seats (0 <-> 1), resets budgets and dishes, assigns fresh secret orders,
+ * re-initializes stock and rounds, and transitions state to TIER_CONFIRMED (or LOBBY if new tier).
+ */
+export function resetMatchForRematch(
+  match: Match,
+  newSeed: number,
+  now: number,
+  newTier?: TierId,
+): Match {
+  if (!match.players[0] || !match.players[1]) {
+    throw new Error('Both players must be present for a rematch');
+  }
+
+  const p0 = match.players[0];
+  const p1 = match.players[1];
+  const tier = newTier ?? match.tier;
+  const tierDef = TIERS[tier];
+
+  const orders = match.config.enableCustomerOrders
+    ? pickDeterministicCustomerOrders(newSeed, 2)
+    : [];
+
+  // Swap seats: p1 becomes seat 0, p0 becomes seat 1
+  const swappedP0: Player = {
+    ...p1,
+    seat: 0,
+    ready: false,
+    budget: tierDef.startingBudget,
+    dish: [],
+    secretOrder: match.config.enableCustomerOrders ? orders[0] ?? null : null,
+    chefsTipGranted: false,
+  };
+
+  const swappedP1: Player = {
+    ...p0,
+    seat: 1,
+    ready: false,
+    budget: tierDef.startingBudget,
+    dish: [],
+    secretOrder: match.config.enableCustomerOrders ? orders[1] ?? null : null,
+    chefsTipGranted: false,
+  };
+
+  // Reset stock
+  const remainingStock: Record<string, number> = {};
+  for (const ing of STREET_INGREDIENTS) {
+    if (ing.tier === tier) {
+      remainingStock[ing.id] = ing.stock;
+    }
+  }
+
+  // Reset rounds
+  const rounds: Round[] = tierDef.slots.map((slot, idx) => ({
+    roundIndex: idx,
+    slot,
+    availableIngredients: STREET_INGREDIENTS.filter(
+      (ing) => ing.tier === tier && ing.slot === slot,
+    ),
+    bidsLockedByPlayer: {},
+    privateBids: {},
+    resolution: null,
+    startedAt: 0,
+    deadlineAt: 0,
+  }));
+
+  const nextState: MatchState = newTier && newTier !== match.tier ? 'LOBBY' : 'TIER_CONFIRMED';
+
+  return {
+    ...match,
+    seed: newSeed,
+    tier,
+    state: nextState,
+    roundIndex: 0,
+    players: [swappedP0, swappedP1],
+    rounds,
+    remainingStock,
+    result: null,
+    stateEnteredAt: now,
+    stateDeadlineAt: now + getStateTimeout(nextState),
+  };
+}
+
+/**
+ * Resets match state when a player leaves the room during LOBBY or TIER_CONFIRMED:
+ * Removes leaving player, places remaining player into seat 0 with ready = false,
+ * and resets match state to LOBBY.
+ */
+export function resetMatchOnLobbyLeave(
+  match: Match,
+  leavingPlayerId: string,
+  now: number,
+): Match {
+  const remaining = match.players.find((p) => p && p.id !== leavingPlayerId);
+
+  const updatedPlayers: [Player | null, Player | null] = remaining
+    ? [{ ...remaining, seat: 0, ready: false }, null]
+    : [null, null];
+
+  return {
+    ...match,
+    state: 'LOBBY',
+    roundIndex: 0,
+    players: updatedPlayers,
+    stateEnteredAt: now,
+    stateDeadlineAt: now + getStateTimeout('LOBBY'),
+  };
+}

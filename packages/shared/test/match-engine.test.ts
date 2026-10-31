@@ -6,6 +6,8 @@ import {
   createMatch,
   finalizeMatch,
   forfeitMatch,
+  resetMatchForRematch,
+  resetMatchOnLobbyLeave,
   setPlayerReady,
   startRound,
   submitBid,
@@ -201,5 +203,70 @@ describe('Match Engine Lifecycle & State Machine', () => {
     expect(match.result?.winnerId).toBe('p1');
     expect(match.result?.winReason).toBe('FORFEIT');
     expect(match.result?.forfeitedByPlayerId).toBe('p0');
+  });
+
+  it('resetMatchForRematch swaps seats, resets budgets, clears dishes, and transitions to TIER_CONFIRMED', () => {
+    let match = createMatch({ seed: 2026 });
+    match = addPlayerToMatch(match, { id: 'p0', nickname: 'Alice' });
+    match = addPlayerToMatch(match, { id: 'p1', nickname: 'Bob' });
+
+    // Modify budgets and dish to simulate mid-or-post game state
+    match.players[0]!.budget = 4;
+    match.players[1]!.budget = 7;
+    match.state = 'POST_MATCH';
+
+    const rematch = resetMatchForRematch(match, 9001, 10000);
+
+    expect(rematch.state).toBe('TIER_CONFIRMED');
+    expect(rematch.seed).toBe(9001);
+    expect(rematch.roundIndex).toBe(0);
+    expect(rematch.result).toBeNull();
+
+    // Seats swapped: Bob is now seat 0, Alice is seat 1
+    expect(rematch.players[0]?.id).toBe('p1');
+    expect(rematch.players[0]?.seat).toBe(0);
+    expect(rematch.players[0]?.budget).toBe(20);
+    expect(rematch.players[0]?.dish).toEqual([]);
+
+    expect(rematch.players[1]?.id).toBe('p0');
+    expect(rematch.players[1]?.seat).toBe(1);
+    expect(rematch.players[1]?.budget).toBe(20);
+    expect(rematch.players[1]?.dish).toEqual([]);
+  });
+
+  it('resetMatchOnLobbyLeave removes leaving player and resets remaining player to LOBBY ready=false', () => {
+    let match = createMatch({ seed: 2026 });
+    match = addPlayerToMatch(match, { id: 'p0', nickname: 'Alice' });
+    match = addPlayerToMatch(match, { id: 'p1', nickname: 'Bob' });
+    match.players[0]!.ready = true;
+    match.players[1]!.ready = true;
+    match.state = 'TIER_CONFIRMED';
+
+    // Alice leaves
+    const reset = resetMatchOnLobbyLeave(match, 'p0', 5000);
+    expect(reset.state).toBe('LOBBY');
+    expect(reset.players[0]?.id).toBe('p1');
+    expect(reset.players[0]?.seat).toBe(0);
+    expect(reset.players[0]?.ready).toBe(false);
+    expect(reset.players[1]).toBeNull();
+
+    // Bob also leaves -> both players null
+    const allLeave = resetMatchOnLobbyLeave(reset, 'p1', 6000);
+    expect(allLeave.players[0]).toBeNull();
+    expect(allLeave.players[1]).toBeNull();
+  });
+
+  it('resetMatchForRematch edge cases: throws when players missing, handles customer orders and tier change', () => {
+    const emptyMatch = createMatch();
+    expect(() => resetMatchForRematch(emptyMatch, 1234, 0)).toThrow('Both players must be present');
+
+    let match = createMatch({ config: { enableCustomerOrders: true } });
+    match = addPlayerToMatch(match, { id: 'p0', nickname: 'Alice' });
+    match = addPlayerToMatch(match, { id: 'p1', nickname: 'Bob' });
+
+    // Rematch with customer orders enabled
+    const rematch = resetMatchForRematch(match, 4321, 1000);
+    expect(rematch.players[0]?.secretOrder).not.toBeNull();
+    expect(rematch.players[1]?.secretOrder).not.toBeNull();
   });
 });
