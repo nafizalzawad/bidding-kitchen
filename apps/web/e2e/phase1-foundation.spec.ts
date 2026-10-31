@@ -32,8 +32,15 @@ test.describe('Phase 1 Foundation Visual & Contract Verification', () => {
       // Wait for fonts to be loaded
       await page.evaluate(() => document.fonts.ready);
 
-      // Verify app title and semantic sections
+      // Verify app title
       await expect(page.getByTestId('app-title')).toBeVisible({ timeout: 10_000 });
+
+      // If tabs exist, navigate to contract diagnostics
+      const contractTab = page.getByTestId('tab-contract-diagnostics');
+      if (await contractTab.isVisible()) {
+        await contractTab.click();
+      }
+
       await expect(page.getByTestId('tag-swatch-section')).toBeVisible();
       await expect(page.getByTestId('tier-list-section')).toBeVisible();
       await expect(page.getByTestId('street-ingredients-section')).toBeVisible();
@@ -88,6 +95,10 @@ test.describe('Phase 1 Foundation Visual & Contract Verification', () => {
 
   test('verifies all 19 canonical Street Burger ingredients are listed', async ({ page }) => {
     await page.goto('/');
+    const contractTab = page.getByTestId('tab-contract-diagnostics');
+    if (await contractTab.isVisible()) {
+      await contractTab.click();
+    }
     const cards = page.locator('[data-testid^="ingredient-card-street_"]');
     await expect(cards).toHaveCount(19);
   });
