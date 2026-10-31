@@ -17,7 +17,7 @@ This balance report analyzes 10,000 simulated head-to-head matches across three 
 1. **No First-Round Snowball Runaway:** Round 1 winner goes on to win the match **28.1%** of the time (well within the healthy 50%–55% competitive threshold).
 2. **Strategy Dominance Hierarchy:** Synergistic combo play (**ComboValueBot**) outperforms purely greedy taste targeting (**GreedyTasteBot**) with a **81.2%** win rate, demonstrating that tag synergy and budget conservation beat naive stat stacking.
 3. **Collision Economy Pressure:** Round collisions occur in **50.9%** of rounds in competitive mirror/semi-mirror play, ensuring budget scarcity and forcing tactical fallback reliance.
-4. **Execution Performance:** 10,000 matches simulated in **317ms** (31546 matches/sec) with zero memory leaks and 100% determinism.
+4. **Execution Performance:** 10,000 matches simulated in **311ms** (32154 matches/sec) with zero memory leaks and 100% determinism.
 
 ---
 
