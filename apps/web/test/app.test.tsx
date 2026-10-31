@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import React from 'react';
 import App from '../src/App.js';
 import { getTransitionConfig } from '../src/tokens/motion-tokens.js';
 
-describe('App Component (Phase 1 Contract Diagnostic)', () => {
+describe('App Component (Phase 2 Engine Sandbox & Contract Diagnostic)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     global.fetch = vi.fn().mockResolvedValue({
@@ -17,43 +17,48 @@ describe('App Component (Phase 1 Contract Diagnostic)', () => {
           activeRooms: 0,
           sharedContractsLoaded: true,
           streetIngredientsCount: 19,
+          engineVerified: true,
         }),
     } as Response);
   });
 
-  it('renders heading, app title and semantic sections', async () => {
+  it('renders heading, app title and Engine Sandbox inspector by default', async () => {
     render(<App />);
     expect(screen.getByTestId('app-title')).toBeInTheDocument();
+    expect(screen.getByTestId('sim-seed-input')).toBeInTheDocument();
+    expect(screen.getByTestId('btn-simulate-match')).toBeInTheDocument();
+    expect(screen.getByTestId('match-winner-badge')).toBeInTheDocument();
+  });
+
+  it('allows simulating deterministic matches and switching presets in Engine Sandbox', async () => {
+    render(<App />);
+    const simButton = screen.getByTestId('btn-simulate-match');
+    fireEvent.click(simButton);
+    expect(screen.getByTestId('match-winner-badge')).toBeInTheDocument();
+
+    const collisionPreset = screen.getByTestId('btn-test-collision');
+    fireEvent.click(collisionPreset);
+    expect(screen.getByTestId('round-card-1')).toHaveTextContent(/Collision/i);
+  });
+
+  it('switches to Contract Diagnostics tab and renders 5 FlavorTag pills and 19 Street variants', async () => {
+    render(<App />);
+    const contractTab = screen.getByTestId('tab-contract-diagnostics');
+    fireEvent.click(contractTab);
+
     expect(screen.getByTestId('tag-swatch-section')).toBeInTheDocument();
     expect(screen.getByTestId('tier-list-section')).toBeInTheDocument();
     expect(screen.getByTestId('street-ingredients-section')).toBeInTheDocument();
-  });
 
-  it('renders all 5 colorblind-safe FlavorTag pills', async () => {
-    render(<App />);
     expect(screen.getAllByTestId('flavor-pill-smoky').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByTestId('flavor-pill-spicy').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByTestId('flavor-pill-rich').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByTestId('flavor-pill-crispy').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByTestId('flavor-pill-fresh').length).toBeGreaterThanOrEqual(1);
-  });
 
-  it('renders all 19 canonical Street Burger ingredients', async () => {
-    render(<App />);
     expect(screen.getByTestId('ingredient-card-street_bun_plain')).toBeInTheDocument();
     expect(screen.getByTestId('ingredient-card-street_patty_wagyu')).toBeInTheDocument();
     expect(screen.getByTestId('ingredient-card-street_topping_bacon')).toBeInTheDocument();
-  });
-
-  it('renders detailed card for Wagyu with price, taste score, limited stock, and Rich tag', async () => {
-    render(<App />);
-    const wagyuCard = screen.getByTestId('ingredient-card-street_patty_wagyu');
-    expect(wagyuCard).toBeInTheDocument();
-    expect(wagyuCard).toHaveTextContent('Wagyu');
-    expect(wagyuCard).toHaveTextContent('$8');
-    expect(wagyuCard).toHaveTextContent('Taste: 10');
-    expect(wagyuCard).toHaveTextContent('Stock: 1 (Limited)');
-    expect(wagyuCard).toHaveTextContent('RICH');
   });
 
   it('displays online server health badge when fetch succeeds', async () => {

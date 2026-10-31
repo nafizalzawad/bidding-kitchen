@@ -70,3 +70,19 @@ Every FlavorTag features dual-coding: a high-contrast background plus an explici
 - **Section 1**: Colorblind-safe TagPill showcase rendering all 5 FlavorTag badges with distinct SVG icons.
 - **Section 2**: Tier summary cards for STREET ($20), BISTRO ($30), and CHEFS_TABLE ($40).
 - **Section 3**: Responsive grid of all 19 canonical Street Tier ($20 Burger) ingredients grouped by Slot (BUN, PATTY, SAUCE, CHEESE, TOPPING) with name, basePrice, tasteScore, stock badge, and TagPills.
+
+---
+
+## 6. Engine Sandbox Inspector (Phase 2 Component)
+
+The Engine Sandbox Inspector provides interactive browser-side execution of pure game rules:
+- **Seed & Archetype Controls**: Numeric seed input, Bot A/B dropdowns (`COMBO`, `GREEDY`, `RANDOM`), and a primary "Simulate Match" button.
+- **Collision Presets**: One-click scenario triggers for Wagyu collision testing and Truffle budget tiebreak testing.
+- **Match Winner Banner**: High-contrast banner highlighting the winner, win reason, victory title, and key moment recap.
+- **Side-by-Side Player Score Cards**: Detailed point tally (Taste + Combos + Secret Order + Leftover Money Bonus) and dish name.
+- **5 Round Resolution Cards**: Distinct badge styling for collision types:
+  - `NO_COLLISION`: Emerald green pill ("Clear Win")
+  - `COLLISION_HIGH_BID`: Amber flame pill ("⚡ Collision: High Bid Win")
+  - `COLLISION_TIE_BUDGET`: Purple scale pill ("⚖️ Collision: Budget Tiebreak")
+  - `COLLISION_TIE_COINFLIP`: Blue coin pill ("🪙 Collision: Coinflip Tiebreak")
+  - `CHEF'S TIP`: Pink chef pill ("👨‍🍳 Chef's Tip +$2") awarded in Round 3 for $\ge 3$ taste point deficits.

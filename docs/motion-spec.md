@@ -12,7 +12,7 @@
 ## 2. Signature Moments Specification Matrix
 
 | # | Signature Element | Trigger / State | Duration (ms) | Easing / Spring Parameters | Delay / Stagger | Reduced-Motion Alternative | Audio Sync Frame | Communicative Purpose |
-| :-: | :--- | :--- | :-: | :--- | :--- | :--- | :-: | :--- |
+| :-: | :--- | :--- | :-: | :--- | :--- | :--- | :--- | :-: | :--- |
 | **1** | **Round Ingredient Cards Slide-In** | `ROUND_REVEAL` | 350ms | `bouncyKitchen` (stiffness: 380, damping: 22, mass: 0.9) | `staggerChildren: 60ms` | 120ms linear opacity fade | Frame 0 (Slide whoosh) | Introduces round choices with rhythmic entry |
 | **2** | **Bid Lock Stamp** | `BIDDING -> LOCKED` | 250ms | `bouncyKitchen` (`scale(1.15) -> scale(1.0)`) | Immediate on user tap | 100ms opacity pop | Frame 2 (Heavy rubber stamp thud) | Confirms bid lock-in with tactile certainty |
 | **3** | **Simultaneous Bid Card 3D Flip** | `RESOLVE` start | 550ms | `snappyFlip` (stiffness: 300, damping: 26, `rotateY(0deg -> 180deg)`) | Synchronous for both players | 120ms cross-fade between front/back | Frame 6 (Card-flip snap) | Dramatic reveal of both players' secret bids |
@@ -32,3 +32,31 @@ export function getTransitionConfig(key: MotionKey, prefersReducedMotion: boolea
 ```
 - Under normal motion, returns the exact spring configuration and duration.
 - Under reduced motion, returns `{ duration: 0.12, ease: 'linear', animateProperty: 'opacity' }`.
+
+---
+
+## 4. Phase 2 Resolve & Final Reveal Timeline Breakdown
+
+```typescript
+export const RESOLVE_TIMELINE_MS = {
+  total: 4000,
+  bidReveal: 1000,       // 0–1000ms: 3D flip card reveal of both secret bids
+  collisionClash: 1200,   // 1000–2200ms: Collision badge pop / clash impact if same item
+  winnerAward: 1000,      // 2200–3200ms: Winner variant slap & loser fallback badge
+  budgetUpdate: 800,      // 3200–4000ms: Budget drain animation & Chef's Tip pulse if awarded
+} as const;
+
+export const FINAL_REVEAL_STEPS_MS = {
+  total: 8000,
+  tasteCount: 2000,      // 0–2000ms: Base ingredient taste scores ticker count-up
+  comboBurst: 2500,      // 2000–4500ms: Combo synergy badges burst with point tallies
+  orderBonus: 1500,      // 4500–6000ms: Customer secret order reveal & +5 bonus
+  winnerCrown: 2000,     // 6000–8000ms: Winner crown stamp, confetti, and victory title
+} as const;
+```
+
+Numerical count-up interpolation helper:
+```typescript
+export function interpolateCountUp(current: number, target: number, progress: number): number;
+```
+Calculates clamped linear interpolation for real-time React counter displays.
