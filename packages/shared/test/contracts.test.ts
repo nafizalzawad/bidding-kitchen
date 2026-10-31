@@ -89,6 +89,7 @@ describe('@bidding-kitchen/shared Contracts & Invariants', () => {
   });
 
   it('validates state transitions with canTransition', () => {
+    expect(ALLOWED_STATE_TRANSITIONS.LOBBY).toContain('TIER_CONFIRMED');
     expect(canTransition('BIDDING', 'LOCKED')).toBe(true);
     expect(canTransition('BIDDING', 'RESOLVE')).toBe(false);
     expect(canTransition('LOCKED', 'RESOLVE')).toBe(true);
