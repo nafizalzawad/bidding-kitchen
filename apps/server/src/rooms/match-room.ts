@@ -1,10 +1,6 @@
 import type { Server as SocketIOServer, Socket } from 'socket.io';
 import {
-  autoLockExpiredBids,
-  calculateMatchResult,
-  calculatePlayerScore,
   createAutoTimeoutBid,
-  createMatch,
   finalizeMatch,
   forfeitMatch,
   resetMatchForRematch,
@@ -20,7 +16,6 @@ import {
   type ClientToServerEvents,
   type GameError,
   type Match,
-  type Player,
   type ServerToClientEvents,
   type TierId,
 } from '@bidding-kitchen/shared';
@@ -140,7 +135,7 @@ export class MatchRoom {
     return { ok: true };
   }
 
-  public handleTutorialDone(playerId: string): { ok: true } | { ok: false; error: GameError } {
+  public handleTutorialDone(_playerId: string): { ok: true } | { ok: false; error: GameError } {
     if (this.match.state === 'MATCH_INTRO') {
       this.onMatchIntroTimeout();
     }

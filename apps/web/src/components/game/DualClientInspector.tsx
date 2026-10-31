@@ -14,7 +14,6 @@ import {
   Clock,
   RotateCcw,
   CheckCircle2,
-  AlertTriangle,
 } from 'lucide-react';
 import {
   getTimerUrgencyState,

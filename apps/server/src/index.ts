@@ -12,7 +12,7 @@ import { metricsRoutes } from './metrics.js';
 import { RoomManager, type RoomManagerOptions } from './rooms/room-manager.js';
 import { registerSocketHandlers } from './socket/socket-handler.js';
 
-export interface BuildServerOptions extends RoomManagerOptions {}
+export type BuildServerOptions = RoomManagerOptions;
 
 export async function buildServer(options: BuildServerOptions = {}) {
   const fastify = Fastify({

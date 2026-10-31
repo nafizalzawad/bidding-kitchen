@@ -35,6 +35,12 @@ test.describe('Phase 2 Engine Sandbox Visual & Invariant Verification', () => {
       // Verify app title
       await expect(page.getByTestId('app-title')).toBeVisible({ timeout: 10_000 });
 
+      // If tabs exist, navigate to Engine Sandbox
+      const sandboxTab = page.getByTestId('tab-engine-sandbox');
+      if (await sandboxTab.isVisible()) {
+        await sandboxTab.click();
+      }
+
       // Verify Engine Sandbox panel is active
       await expect(page.getByTestId('sim-seed-input')).toBeVisible();
       await expect(page.getByTestId('btn-simulate-match')).toBeVisible();
@@ -62,6 +68,11 @@ test.describe('Phase 2 Engine Sandbox Visual & Invariant Verification', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     await page.evaluate(() => document.fonts.ready);
+
+    const sandboxTab = page.getByTestId('tab-engine-sandbox');
+    if (await sandboxTab.isVisible()) {
+      await sandboxTab.click();
+    }
 
     // Click the Wagyu collision preset button
     const collisionBtn = page.getByTestId('btn-test-collision');
