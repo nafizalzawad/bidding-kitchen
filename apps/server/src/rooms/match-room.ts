@@ -338,7 +338,14 @@ export class MatchRoom {
 
   private transitionToTierConfirmed(): void {
     const now = Date.now();
-    this.match = transitionState(this.match, 'TIER_CONFIRMED', now);
+    for (const player of this.match.players) {
+      if (player) {
+        player.ready = false;
+      }
+    }
+    if (this.match.state !== 'TIER_CONFIRMED') {
+      this.match = transitionState(this.match, 'TIER_CONFIRMED', now);
+    }
     this.broadcastStateSync();
 
     this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.TIER_CONFIRMED, () => {
@@ -347,6 +354,7 @@ export class MatchRoom {
   }
 
   private onTierConfirmedTimeout(): void {
+    if (this.match.state !== 'TIER_CONFIRMED') return;
     const now = Date.now();
     this.match = transitionState(this.match, 'MATCH_INTRO', now);
     this.broadcastStateSync();
@@ -357,8 +365,12 @@ export class MatchRoom {
   }
 
   private onMatchIntroTimeout(): void {
+    if (this.match.state !== 'MATCH_INTRO') return;
     const now = Date.now();
-    this.match = startRound(this.match, 0, now);
+    this.match = {
+      ...this.match,
+      roundIndex: 0,
+    };
     this.match = transitionState(this.match, 'ROUND_REVEAL', now);
     this.broadcastStateSync();
 
@@ -368,8 +380,9 @@ export class MatchRoom {
   }
 
   private onRoundRevealTimeout(): void {
+    if (this.match.state !== 'ROUND_REVEAL') return;
     const now = Date.now();
-    this.match = transitionState(this.match, 'BIDDING', now);
+    this.match = startRound(this.match, this.match.roundIndex, now);
     this.broadcastStateSync();
 
     this.timerController.set('biddingTimer', STATE_TIMEOUTS_MS.BIDDING, () => {
@@ -378,6 +391,7 @@ export class MatchRoom {
   }
 
   private onBiddingTimeout(): void {
+    if (this.match.state !== 'BIDDING') return;
     const now = Date.now();
     const currentRound = this.match.rounds[this.match.roundIndex]!;
 
@@ -398,7 +412,9 @@ export class MatchRoom {
 
   private transitionToLocked(): void {
     const now = Date.now();
-    this.match = transitionState(this.match, 'LOCKED', now);
+    if (this.match.state !== 'LOCKED') {
+      this.match = transitionState(this.match, 'LOCKED', now);
+    }
     this.broadcastStateSync();
 
     this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.LOCKED, () => {
@@ -407,6 +423,7 @@ export class MatchRoom {
   }
 
   private onLockedTimeout(): void {
+    if (this.match.state !== 'LOCKED') return;
     const now = Date.now();
     const { updatedMatch, resolution } = resolveRound(this.match);
     this.match = transitionState(updatedMatch, 'RESOLVE', now);
@@ -430,6 +447,7 @@ export class MatchRoom {
   }
 
   private onResolveTimeout(): void {
+    if (this.match.state !== 'RESOLVE') return;
     const now = Date.now();
     this.match = transitionState(this.match, 'ROUND_END', now);
     this.broadcastStateSync();
@@ -440,12 +458,16 @@ export class MatchRoom {
   }
 
   private onRoundEndTimeout(): void {
+    if (this.match.state !== 'ROUND_END') return;
     const now = Date.now();
     const tierDef = TIERS[this.match.tier];
 
     if (this.match.roundIndex < tierDef.roundsCount - 1) {
-      // Advance to next round
-      this.match = startRound(this.match, this.match.roundIndex + 1, now);
+      // Advance to next round reveal
+      this.match = {
+        ...this.match,
+        roundIndex: this.match.roundIndex + 1,
+      };
       this.match = transitionState(this.match, 'ROUND_REVEAL', now);
       this.broadcastStateSync();
 
@@ -467,7 +489,13 @@ export class MatchRoom {
   }
 
   private onFinalRevealTimeout(): void {
+    if (this.match.state !== 'FINAL_REVEAL') return;
     const now = Date.now();
+    for (const player of this.match.players) {
+      if (player) {
+        player.ready = false;
+      }
+    }
     this.match = transitionState(this.match, 'POST_MATCH', now);
     this.broadcastStateSync();
 
