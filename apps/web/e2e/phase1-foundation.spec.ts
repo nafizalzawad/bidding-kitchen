@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Target folder for Phase 1 visual verification screenshots
 const screenshotDir = path.resolve(__dirname, '../../../docs/visual-qa/screenshots/phase-1');
 
 test.beforeAll(async () => {
@@ -16,25 +15,33 @@ test.beforeAll(async () => {
 });
 
 const VIEWPORTS = [
-  { name: 'mobile-compact', width: 360, height: 640 },
-  { name: 'mobile-standard', width: 390, height: 844 },
-  { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1280, height: 800 },
+  { name: 'mobile-sm', filename: 'contract-diagnostic-mobile-sm.png', width: 360, height: 640 },
+  { name: 'mobile-md', filename: 'contract-diagnostic-mobile-md.png', width: 390, height: 844 },
+  { name: 'tablet', filename: 'contract-diagnostic-tablet.png', width: 768, height: 1024 },
+  { name: 'desktop', filename: 'contract-diagnostic-desktop.png', width: 1280, height: 800 },
 ];
 
 test.describe('Phase 1 Foundation Visual & Contract Verification', () => {
   for (const vp of VIEWPORTS) {
-    test(`renders diagnostic page and captures screenshot at ${vp.width}x${vp.height} (${vp.name})`, async ({
+    test(`renders diagnostic page, asserts layout invariants, and captures ${vp.filename} at ${vp.width}x${vp.height}`, async ({
       page,
     }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.goto('/');
 
-      // Wait for main title and components
-      await expect(
-        page.getByRole('heading', { level: 1, name: /Bidding Kitchen/i })
-      ).toBeVisible({ timeout: 10_000 });
-      await expect(page.getByText('Phase 1 Foundation')).toBeVisible();
+      // Wait for fonts to be loaded
+      await page.evaluate(() => document.fonts.ready);
+
+      // Verify app title and semantic sections
+      await expect(page.getByTestId('app-title')).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByTestId('tag-swatch-section')).toBeVisible();
+      await expect(page.getByTestId('tier-list-section')).toBeVisible();
+      await expect(page.getByTestId('street-ingredients-section')).toBeVisible();
+
+      // Verify server health badge is online
+      const healthBadge = page.getByTestId('server-health-badge');
+      await expect(healthBadge).toBeVisible();
+      await expect(healthBadge).toContainText('online');
 
       // Check flavor tag pills
       await expect(page.getByTestId('flavor-pill-smoky').first()).toBeVisible();
@@ -43,21 +50,45 @@ test.describe('Phase 1 Foundation Visual & Contract Verification', () => {
       await expect(page.getByTestId('flavor-pill-crispy').first()).toBeVisible();
       await expect(page.getByTestId('flavor-pill-fresh').first()).toBeVisible();
 
-      // Ensure at least one key ingredient card is visible
-      await expect(page.getByTestId('ingredient-card-street-patty-wagyu')).toBeVisible();
+      // Verify Wagyu card attributes
+      const wagyuCard = page.getByTestId('ingredient-card-street_patty_wagyu');
+      await expect(wagyuCard).toBeVisible();
+      await expect(wagyuCard).toContainText('Wagyu');
+      await expect(wagyuCard).toContainText('$8');
+      await expect(wagyuCard).toContainText('Taste: 10');
+      await expect(wagyuCard).toContainText('Stock: 1 (Limited)');
+
+      // Automated layout invariant: Zero horizontal overflow
+      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(scrollWidth).toBeLessThanOrEqual(vp.width);
+
+      // Automated layout invariant: Touch targets >= 44x44
+      const interactiveButtons = page.locator('button');
+      const buttonCount = await interactiveButtons.count();
+      for (let i = 0; i < buttonCount; i++) {
+        const btn = interactiveButtons.nth(i);
+        if (await btn.isVisible()) {
+          const box = await btn.boundingBox();
+          if (box) {
+            expect(box.width).toBeGreaterThanOrEqual(44);
+            expect(box.height).toBeGreaterThanOrEqual(44);
+          }
+        }
+      }
 
       // Capture screenshot
-      const filename = `viewport-${vp.width}x${vp.height}.png`;
-      const filePath = path.join(screenshotDir, filename);
+      const filePath = path.join(screenshotDir, vp.filename);
       await page.screenshot({ path: filePath, fullPage: true });
 
       expect(fs.existsSync(filePath)).toBe(true);
+      const stat = fs.statSync(filePath);
+      expect(stat.size).toBeGreaterThan(10_000);
     });
   }
 
   test('verifies all 19 canonical Street Burger ingredients are listed', async ({ page }) => {
     await page.goto('/');
-    const cards = page.locator('[data-testid^="ingredient-card-street-"]');
+    const cards = page.locator('[data-testid^="ingredient-card-street_"]');
     await expect(cards).toHaveCount(19);
   });
 });

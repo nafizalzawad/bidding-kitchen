@@ -1,0 +1,26 @@
+{
+  "name": "bidding-kitchen-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Two-player online auction-cooking game",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel -r run dev",
+    "build": "pnpm --filter @bidding-kitchen/shared build && pnpm --filter @bidding-kitchen/server build && pnpm --filter @bidding-kitchen/web build",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "pnpm --filter @bidding-kitchen/shared test && pnpm --filter @bidding-kitchen/server test && pnpm --filter @bidding-kitchen/web test",
+    "test:e2e": "pnpm --filter @bidding-kitchen/web test:e2e",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/node": "^22.13.4",
+    "eslint": "^9.20.1",
+    "globals": "^15.15.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0"
+  },
+  "packageManager": "pnpm@12.16.1"
+}
