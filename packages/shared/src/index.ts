@@ -11,3 +11,15 @@ export * from './data/ingredients-bistro.js';
 export * from './data/ingredients-chefs-table.js';
 export * from './data/combos.js';
 export * from './data/customer-orders.js';
+
+// Game Engine
+export * from './engine/prng.js';
+export * from './engine/validators.js';
+export * from './engine/dish-namer.js';
+export * from './engine/scorer.js';
+export * from './engine/bid-resolver.js';
+export * from './engine/match-engine.js';
+
+// Bot Simulation
+export * from './sim/bots.js';
+export * from './sim/simulator.js';
