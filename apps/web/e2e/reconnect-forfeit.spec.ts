@@ -15,8 +15,12 @@ test.beforeAll(async () => {
   if (!fs.existsSync(screenshotDir)) {
     fs.mkdirSync(screenshotDir, { recursive: true });
   }
-  if (!fs.existsSync(artifactDir)) {
-    fs.mkdirSync(artifactDir, { recursive: true });
+  try {
+    if (!fs.existsSync(artifactDir)) {
+      fs.mkdirSync(artifactDir, { recursive: true });
+    }
+  } catch {
+    // Artifact directory is only available in local Antigravity environment
   }
 });
 

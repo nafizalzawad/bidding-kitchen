@@ -17,16 +17,17 @@ export default defineConfig({
       command: 'pnpm --filter @bidding-kitchen/server run dev',
       port: 3001,
       reuseExistingServer: !process.env['CI'],
-      timeout: 15_000,
+      timeout: 60_000,
       env: {
         TRANSITION_TIMER_SCALE: '0.2',
+        MATCH_TIMER_SCALE: '0.2',
       },
     },
     {
       command: 'pnpm --filter @bidding-kitchen/web run dev',
       port: 5173,
       reuseExistingServer: !process.env['CI'],
-      timeout: 15_000,
+      timeout: 60_000,
     },
   ],
 });

@@ -58,5 +58,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: visual-qa-screenshots
-          path: docs/visual-qa/screenshots/phase-1/
+          path: docs/visual-qa/screenshots/
+          if-no-files-found: ignore
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
           if-no-files-found: ignore
