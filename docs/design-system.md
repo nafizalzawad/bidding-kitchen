@@ -2,9 +2,10 @@
 
 ## 1. Design Philosophy
 
-- **Art Direction**: "Bright Bouncy Cartoon Kitchen" with chunky tactile surfaces, ink borders, and responsive physical feedback.
-- **Mobile First**: Built specifically for single-thumb mobile play in portrait orientation (360px to 430px), scaling smoothly to tablet and desktop.
+- **Art Direction**: "Bright Bouncy Cartoon Kitchen" with chunky tactile surfaces, thick ink borders (`border-2 border-[#1E1B18]`), and responsive physical feedback.
+- **Mobile First**: Built specifically for single-thumb mobile play in portrait orientation (360px to 430px), scaling cleanly to 768px tablet and 1280px desktop.
 - **Accessibility Invariant**: High contrast ratios compliant with WCAG AA (>= 4.5:1 for normal text, >= 3.0:1 for large text). Non-reliance on color alone for FlavorTags, stock scarcity, or fallback states.
+- **Zero Cumulative Layout Shift (CLS = 0)**: Reserved container heights on DishVisualizer (`min-h-[88px]` mobile, `min-h-[220px]` desktop), BidControls dock (`min-h-[116px]`), and TimerBar (`h-[28px]`).
 
 ---
 
@@ -55,34 +56,89 @@ Every FlavorTag features dual-coding: a high-contrast background plus an explici
 
 ## 5. Touch Targets & Responsive Viewports
 
-- **Minimum Touch Target**: 44px x 44px (`min-h-[44px] min-w-[44px]`) on all interactive buttons, filter pills, and cards.
+- **Minimum Touch Target**: 44px x 44px (`min-h-[44px] min-w-[44px]`) on all interactive buttons, steppers, and cards.
 - **Target Viewports**:
   - `360 x 640` (mobile-sm: Small Android)
   - `390 x 844` (mobile-md: Modern iPhone)
-  - `768 x 1024` (tablet: iPad Mini portrait)
-  - `1280 x 800` (desktop: Widescreen)
+  - `768 x 1024` (tablet: iPad Portrait)
+  - `1280 x 800` (desktop: Standard Laptop / Netbook)
+- **One-Thumb Mobile Zone**: Primary controls (IngredientCard selection, BidControls `-$1` / `+$1` / slider, and "Lock In Bid" CTA) remain within the bottom 60% of portrait screens.
+- **Horizontal Overflow Invariant**: `document.documentElement.scrollWidth <= window.innerWidth` across all viewports.
 
 ---
 
-## 6. Phase 1 Diagnostic Screen Layout Specification
+## 6. Microcopy Specification Table
 
-- **Header Bar**: Game title ("Bidding Kitchen"), subtitle ("Phase 1: Contracts & Token Swatch"), and live server `/health` status badge.
-- **Section 1**: Colorblind-safe TagPill showcase rendering all 5 FlavorTag badges with distinct SVG icons.
-- **Section 2**: Tier summary cards for STREET ($20), BISTRO ($30), and CHEFS_TABLE ($40).
-- **Section 3**: Responsive grid of all 19 canonical Street Tier ($20 Burger) ingredients grouped by Slot (BUN, PATTY, SAUCE, CHEESE, TOPPING) with name, basePrice, tasteScore, stock badge, and TagPills.
+| Screen / Component | Element | Canonical Copy | Tone & Intent |
+| :--- | :--- | :--- | :--- |
+| `LandingScreen` | Header | "Bidding Kitchen" | Welcoming, energetic |
+| `LandingScreen` | Subtitle | "Two-player auction cooking battle! Out-bid, out-flavor, build the champion burger." | Clear value proposition |
+| `LandingScreen` | Nickname Input | "Enter Chef Nickname (e.g. ChefNafiz)" | Prompting & friendly |
+| `LandingScreen` | Create Room CTA | "Create New Kitchen" | Direct action |
+| `LandingScreen` | Join Room CTA | "Join Kitchen" | Secondary action |
+| `LandingScreen` | Quick Match Pill | "Quick Match (v1.5 Coming Soon)" | Informational roadmap |
+| `LobbyScreen` | Room Code Badge | "Room Code: BURG42" | High-visibility shareable code |
+| `LobbyScreen` | Copy Link CTA | "Copy Invite Link" (Toasts "Invite link copied to clipboard!") | Fast multiplayer sharing |
+| `LobbyScreen` | Waiting State | "Waiting for friend to join..." | Patient, expectant |
+| `LobbyScreen` | Ready CTA | "Ready Up / Start Match" | Clear host/guest commitment |
+| `TierConfirmed` | Countdown | "Both Chefs Ready! Starting in 3..." | Anticipation builder |
+| `MatchIntro` | Banner | "Round 1 of 5: The Bun Auction!" | Transition excitement |
+| `AuctionRound` | Timer Bar | "11s remaining" (Turns yellow at 5s, red pulsating at 3s) | Urgent, clear |
+| `AuctionRound` | Opponent Header | "ChefMaya Locked In!" / "ChefMaya is thinking..." | Dynamic presence |
+| `AuctionRound` | Free Fallback Tag | "FREE Basic Fallback ($0)" | Reassuring safety net |
+| `AuctionRound` | Bid Controls Lock | "Lock In Bid ($9 on Wagyu)" | Unambiguous commitment |
+| `AuctionRound` | Waiting State | "Bid Locked ($9) — Waiting for opponent..." | Reassuring state feedback |
+| `Resolve` | Collision Clash | "COLLISION! Both chefs bid on Wagyu!" | High-stakes drama |
+| `Resolve` | High Bid Win | "ChefNafiz won Wagyu for $9!" | Clear outcome |
+| `Resolve` | Fallback Award | "ChefMaya keeps $18 and gets Basic Beef ($0)!" | Emphasizes budget retention |
+| `FinalReveal` | Reveal Title | "THE GRAND TASTING" | Epic culinary showdown |
+| `FinalReveal` | Dish Name | "The Smoky Wagyu Royale" | Playful, culinary flair |
+| `FinalReveal` | Winner Title | "ChefMaya takes the Golden Spatula!" | Celebratory |
+| `PostMatch` | Key Moment | "Biggest Bid: $9 on Wagyu in Round 2" | Memorable match recap |
+| `PostMatch` | Rematch CTA | "Cook Again (Rematch)" | Retention driver |
+| `ConnectionBanner` | Disconnect Alert| "Opponent disconnected — waiting for reconnection (28s remaining)..." | Transparent timer |
 
 ---
 
-## 6. Engine Sandbox Inspector (Phase 2 Component)
+## 7. Responsive Layout Wireframes
 
-The Engine Sandbox Inspector provides interactive browser-side execution of pure game rules:
-- **Seed & Archetype Controls**: Numeric seed input, Bot A/B dropdowns (`COMBO`, `GREEDY`, `RANDOM`), and a primary "Simulate Match" button.
-- **Collision Presets**: One-click scenario triggers for Wagyu collision testing and Truffle budget tiebreak testing.
-- **Match Winner Banner**: High-contrast banner highlighting the winner, win reason, victory title, and key moment recap.
-- **Side-by-Side Player Score Cards**: Detailed point tally (Taste + Combos + Secret Order + Leftover Money Bonus) and dish name.
-- **5 Round Resolution Cards**: Distinct badge styling for collision types:
-  - `NO_COLLISION`: Emerald green pill ("Clear Win")
-  - `COLLISION_HIGH_BID`: Amber flame pill ("⚡ Collision: High Bid Win")
-  - `COLLISION_TIE_BUDGET`: Purple scale pill ("⚖️ Collision: Budget Tiebreak")
-  - `COLLISION_TIE_COINFLIP`: Blue coin pill ("🪙 Collision: Coinflip Tiebreak")
-  - `CHEF'S TIP`: Pink chef pill ("👨‍🍳 Chef's Tip +$2") awarded in Round 3 for $\ge 3$ taste point deficits.
+### 7.1 Mobile Portrait (360px & 390px)
+```text
++------------------------------------+
+|  Logo  [Sound] [Rules] [P2 Status] | -> 48px Header
+|------------------------------------|
+|  TimerBar (28px fixed) [00:11]      | -> Urgency colored
+|------------------------------------|
+|  Opponent Header ($18, Locked!)    | -> 44px
+|------------------------------------|
+|  DishVisualizer (min-h: 88px)      | -> Culinary burger stack
+|  [ Bottom Bun ]                    |
+|------------------------------------|
+|  Round 2: Patty (Select Variant)   |
+|  [Basic $0]   [Crispy $4]          | -> 2-col responsive grid
+|  [Smash $5]   [*Wagyu $8*]         |    min 44px touch targets
+|------------------------------------|
+|  Sticky BidControls Dock (116px)   | -> Lower 60% thumb zone
+|  [- $1]   === [Slider: $9] === [+$1]
+|  [      Lock In Bid ($9)          ] | -> 52px Primary CTA
++------------------------------------+
+```
+
+### 7.2 Desktop (1280px)
+```text
++-------------------------------------------------------------------------+
+|  🍔 Bidding Kitchen    [Sound] [Combos]               ChefMaya: $18 🔒   |
++-------------------------------------------------------------------------+
+|  TimerBar: 11s remaining [██████████████████████████████████░░░░░░]     |
++------------------------------------+------------------------------------+
+|  LEFT: Your Kitchen Dish           |  RIGHT: Auction Floor              |
+|                                    |                                    |
+|  [ DishVisualizer: min-h: 220px ]  |  Round 2: Patty Selection          |
+|  Burger Plate Canvas:              |  [Basic Beef $0] [Chicken $4]      |
+|  Brioche Bun Stack                 |  [Smash Beef $5] [Wagyu $8 (1)]    |
+|                                    |                                    |
+|  Budget: $16 / $20                 |  Bid Controls & Commitment Dock:   |
+|                                    |  [- $1]   [ Slider: $9 ]   [+ $1]   |
+|  Opponent: ChefMaya ($18)          |  [      Lock In Bid ($9)         ] |
++------------------------------------+------------------------------------+
+```

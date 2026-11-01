@@ -82,3 +82,24 @@ export function getTimerUrgencyState(remainingMs: number): TimerUrgencyState;
 - **Urgent Shake**: Triggered on `remainingMs < 5000ms`, alternating horizontal micro-shakes (`[-3px, 3px]`) over 400ms cycles.
 - **Exit**: Slides up with 200ms linear fade.
 Calculates clamped linear interpolation for real-time React counter displays.
+
+
+---
+
+## 5. Reserved Container Heights & Zero Cumulative Layout Shift (CLS = 0)
+
+To guarantee steady 60fps performance and zero layout shifts on mobile devices as ingredients are accumulated or swapped, all primary animated containers enforce fixed minimum dimensions:
+
+| Component | Target Viewport | Reserved Dimension | CSS Rule | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **`DishVisualizer`** | Mobile (360px & 390px) | Height: 88px | `min-h-[88px] max-h-[88px]` | Keeps the IngredientCard grid rock-solid as 0 to 5 burger layers are stacked |
+| **`DishVisualizer`** | Desktop (1280px) | Height: 220px | `min-h-[220px]` | Generous ceramic plate hero canvas on desktop |
+| **`BidControls`** | Mobile (360px & 390px) | Height: 116px | `min-h-[116px]` | Switching from $0 Basic to $8 Wagyu preserves Lock Bid button Y position |
+| **`TimerBar`** | All Viewports | Height: 28px | `h-[28px]` | Fixed track height with tabular countdown to prevent header jitter |
+| **`OpponentStatusHeader`** | All Viewports | Height: 44px | `min-h-[44px]` | Fixed HUD status bar preventing content jump on locked state change |
+
+### 5.1 Verification Protocol for CLS
+During Playwright visual QA (`static-screens.spec.ts`):
+1. Select Basic Beef (`$0`). Measure bounding box `{ x, y, width, height }` of `data-testid="lock-bid-btn"`.
+2. Select Wagyu (`$8`). Re-measure bounding box.
+3. Assert `Math.abs(y1 - y2) === 0`.
