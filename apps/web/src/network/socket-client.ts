@@ -14,12 +14,17 @@ const resolveDefaultServerUrl = (): string => {
     return import.meta.env.VITE_SERVER_URL;
   }
   if (typeof window !== 'undefined' && window.location?.origin) {
-    // In production or when hosted on Vercel's unified domain, connect to current origin
-    if (import.meta.env.PROD || window.location.hostname !== 'localhost') {
-      return window.location.origin;
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0';
+
+    if (!import.meta.env.PROD && isLocalhost) {
+      return `http://${window.location.hostname}:3001`;
     }
+    return window.location.origin;
   }
-  return 'http://localhost:3001';
+  return 'http://127.0.0.1:3001';
 };
 
 const DEFAULT_SERVER_URL = resolveDefaultServerUrl();

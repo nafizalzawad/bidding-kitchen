@@ -178,7 +178,8 @@ test.describe('Phase 5 Reconnect, Lobby Leave & Forfeit E2E', () => {
     await expect(pageB.getByTestId('screen-lobby')).toBeVisible({ timeout: 10_000 });
 
     // 3. Set short reconnect window (1200ms) for fast automated forfeit testing
-    const overrideRes = await pageA.request.post('http://localhost:3001/api/test/room-timers', {
+    const serverUrl = process.env['SERVER_URL'] || 'http://127.0.0.1:3001';
+    const overrideRes = await pageA.request.post(`${serverUrl}/api/test/room-timers`, {
       data: { roomCode, reconnectWindowMs: 1200 },
     });
     expect(overrideRes.ok()).toBe(true);

@@ -43,14 +43,21 @@ const initialClientState = (nickname: string): ClientState => ({
 });
 
 export const DualClientInspector: React.FC = () => {
-  const [serverUrl, setServerUrl] = useState<string>(
-    () =>
-      import.meta.env.VITE_SERVER_URL ??
-      (typeof window !== 'undefined' &&
-      (import.meta.env.PROD || window.location.hostname !== 'localhost')
-        ? window.location.origin
-        : 'http://localhost:3001')
-  );
+  const [serverUrl, setServerUrl] = useState<string>(() => {
+    if (import.meta.env.VITE_SERVER_URL) return import.meta.env.VITE_SERVER_URL;
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      const isLocalhost =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname === '0.0.0.0';
+
+      if (!import.meta.env.PROD && isLocalhost) {
+        return `http://${window.location.hostname}:3001`;
+      }
+      return window.location.origin;
+    }
+    return 'http://127.0.0.1:3001';
+  });
   const [roomCode, setRoomCode] = useState<string>('');
   const [autoRunning, setAutoRunning] = useState<boolean>(false);
   const [now, setNow] = useState<number>(Date.now());

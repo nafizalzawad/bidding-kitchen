@@ -78,12 +78,19 @@ export const App: React.FC<AppProps> = ({ defaultTab }) => {
 
   const fetchHealth = async () => {
     setLoading(true);
+    const isLocalhost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname === '0.0.0.0');
+
     const serverUrl =
       import.meta.env.VITE_SERVER_URL ??
-      (typeof window !== 'undefined' &&
-      (import.meta.env.PROD || window.location.hostname !== 'localhost')
-        ? window.location.origin
-        : 'http://localhost:3001');
+      (typeof window !== 'undefined' && !import.meta.env.PROD && isLocalhost
+        ? `http://${window.location.hostname}:3001`
+        : typeof window !== 'undefined'
+          ? window.location.origin
+          : 'http://127.0.0.1:3001');
     try {
       let res = await fetch('/health').catch(() => null);
       if (!res || !res.ok) {
