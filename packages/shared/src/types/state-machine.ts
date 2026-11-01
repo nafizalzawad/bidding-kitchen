@@ -5,7 +5,7 @@ export const STATE_TIMEOUTS_MS: Record<MatchState, number> = {
   TIER_CONFIRMED: 3000,
   MATCH_INTRO: 5000,
   ROUND_REVEAL: 2000,
-  BIDDING: 15000,
+  BIDDING: 30000,
   LOCKED: 500,
   RESOLVE: 4000,
   ROUND_END: 3000,
@@ -48,7 +48,7 @@ export const DEFAULT_MVP_MATCH_CONFIG: MatchConfig = {
   enableCustomerOrders: false,
   enableChefsTip: false,
   showOpponentBudget: true,
-  biddingDurationMs: 15000,
+  biddingDurationMs: 30000,
   reconnectWindowMs: 30000,
 };
 
@@ -58,6 +58,6 @@ export const DEFAULT_V15_MATCH_CONFIG: MatchConfig = {
   enableCustomerOrders: true,
   enableChefsTip: true,
   showOpponentBudget: true,
-  biddingDurationMs: 15000,
+  biddingDurationMs: 30000,
   reconnectWindowMs: 30000,
 };

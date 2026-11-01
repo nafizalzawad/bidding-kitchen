@@ -205,6 +205,7 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
   const roundNum = (currentRound?.roundIndex ?? match.roundIndex) + 1;
   const isRoundReveal = match.state === 'ROUND_REVEAL';
   const isLockedState = match.state === 'LOCKED';
+  const totalBiddingDuration = match.config?.biddingDurationMs ?? 30000;
 
   const timeRemainingMs =
     match.state === 'BIDDING' && stateRemainingMs !== undefined
@@ -213,7 +214,7 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
       ? countdownSeconds * 1000
       : currentRound
       ? Math.max(0, currentRound.deadlineAt - match.serverNow)
-      : 15000;
+      : totalBiddingDuration;
 
   // Deductions for BudgetBar during RESOLVE
   const myAward = currentRound?.resolution?.awardsByPlayer?.[me.id];
@@ -305,7 +306,7 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
             </span>
           </div>
         ) : (
-          <TimerBar timeRemainingMs={timeRemainingMs} />
+          <TimerBar timeRemainingMs={timeRemainingMs} totalDurationMs={totalBiddingDuration} />
         )}
       </div>
 

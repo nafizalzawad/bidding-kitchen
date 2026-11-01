@@ -9,7 +9,7 @@ export interface TimerBarProps {
 
 export const TimerBar: React.FC<TimerBarProps> = ({
   timeRemainingMs,
-  totalDurationMs = 15000,
+  totalDurationMs = 30000,
   className = '',
 }) => {
   const clampedTimeMs = Math.max(0, Math.min(totalDurationMs, timeRemainingMs));
@@ -18,14 +18,14 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   const progressPercent = Math.max(0, Math.min(100, progressRatio * 100));
 
   // Urgency thresholds
-  let barColor = 'bg-[#1D7A4C]'; // Green > 5s
+  let barColor = 'bg-[#1D7A4C]'; // Green > 10s
   let isPulsing = false;
 
-  if (secondsLeft <= 3) {
-    barColor = 'bg-[#DC2626]'; // Red <= 3s
+  if (secondsLeft <= 5) {
+    barColor = 'bg-[#DC2626]'; // Red <= 5s
     isPulsing = true;
-  } else if (secondsLeft <= 5) {
-    barColor = 'bg-[#FFB703]'; // Yellow 3-5s
+  } else if (secondsLeft <= 10) {
+    barColor = 'bg-[#FFB703]'; // Yellow 6-10s
   }
 
   return (

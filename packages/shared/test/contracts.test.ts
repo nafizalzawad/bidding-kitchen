@@ -11,6 +11,7 @@ import {
   getIngredientsBySlot,
   getBasicIngredientForSlot,
   DEFAULT_MVP_MATCH_CONFIG,
+  DEFAULT_V15_MATCH_CONFIG,
   RECONNECT_WINDOW_MS,
   TUTORIAL_MATCH_INTRO_TIMEOUT_MS,
   type FlavorTag,
@@ -100,12 +101,15 @@ describe('@bidding-kitchen/shared Contracts & Invariants', () => {
   it('exports exact timeout constants and default MVP match config', () => {
     expect(STATE_TIMEOUTS_MS.LOBBY).toBe(600000);
     expect(STATE_TIMEOUTS_MS.ROUND_REVEAL).toBe(2000);
+    expect(STATE_TIMEOUTS_MS.BIDDING).toBe(30000);
     expect(STATE_TIMEOUTS_MS.LOCKED).toBe(500);
     expect(STATE_TIMEOUTS_MS.FINAL_REVEAL).toBe(8000);
     expect(TUTORIAL_MATCH_INTRO_TIMEOUT_MS).toBe(22000);
     expect(RECONNECT_WINDOW_MS).toBe(30000);
     expect(DEFAULT_MVP_MATCH_CONFIG.stockMode).toBe('ALL_COLLISIONS_CONTEST');
     expect(DEFAULT_MVP_MATCH_CONFIG.uncontestedPaysBasePrice).toBe(true);
+    expect(DEFAULT_MVP_MATCH_CONFIG.biddingDurationMs).toBe(30000);
+    expect(DEFAULT_V15_MATCH_CONFIG.biddingDurationMs).toBe(30000);
   });
 
   it('throws descriptive error if getBasicIngredientForSlot called on slot with no basic', () => {

@@ -180,7 +180,7 @@ describe('Match Engine Lifecycle & State Machine', () => {
     }).match;
 
     // p1 does not bid; timer expires -> autoLockExpiredBids
-    match = autoLockExpiredBids(match, 15000);
+    match = autoLockExpiredBids(match, 30000);
     const round = match.rounds[0]!;
 
     expect(round.bidsLockedByPlayer.p0).toBe(true);
@@ -189,6 +189,37 @@ describe('Match Engine Lifecycle & State Machine', () => {
     expect(round.privateBids.p1?.amount).toBe(0);
     expect(round.privateBids.p1?.isAutoTimeoutBid).toBe(true);
     expect(match.state).toBe('LOCKED');
+  });
+
+  it('Transitions to LOCKED immediately when both players lock bids without waiting for 30s deadline', () => {
+    let match = createMatch({ seed: 2026 });
+    match = addPlayerToMatch(match, { id: 'p0', nickname: 'Alice' });
+    match = addPlayerToMatch(match, { id: 'p1', nickname: 'Bob' });
+    match = startRound(match, 0, 1000);
+
+    expect(match.state).toBe('BIDDING');
+    expect(match.stateDeadlineAt).toBe(1000 + 30000);
+
+    // p0 bids at t = 2000ms
+    const res0 = submitBid(match, 'p0', {
+      roundIndex: 0,
+      ingredientId: 'street_bun_brioche',
+      amount: 4,
+    }, 2000);
+    expect(res0.bothLocked).toBe(false);
+    expect(res0.match.state).toBe('BIDDING');
+
+    // p1 bids at t = 5000ms (only 4s into the 30s timer)
+    const res1 = submitBid(res0.match, 'p1', {
+      roundIndex: 0,
+      ingredientId: 'street_bun_sesame',
+      amount: 3,
+    }, 5000);
+
+    // Both players locked -> immediate transition to LOCKED at t=5000ms without waiting for 31000ms
+    expect(res1.bothLocked).toBe(true);
+    expect(res1.match.state).toBe('LOCKED');
+    expect(res1.match.stateEnteredAt).toBe(5000);
   });
 
   it('Cleanly terminates match on forfeit and declares remaining player winner', () => {

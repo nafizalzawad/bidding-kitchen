@@ -51,7 +51,7 @@ const streetConfig: MatchConfig = {
   enableCustomerOrders: true,
   enableChefsTip: true,
   showOpponentBudget: true,
-  biddingDurationMs: 15000,
+  biddingDurationMs: 30000,
   reconnectWindowMs: 30000,
 };
 
@@ -274,7 +274,7 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
       result: null,
       serverNow: Date.now(),
       stateEnteredAt: Date.now(),
-      stateDeadlineAt: Date.now() + 15000,
+      stateDeadlineAt: Date.now() + 30000,
     },
   },
 
@@ -297,7 +297,7 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
       result: null,
       serverNow: Date.now(),
       stateEnteredAt: Date.now(),
-      stateDeadlineAt: Date.now() + 15000,
+      stateDeadlineAt: Date.now() + 30000,
     },
   },
 
