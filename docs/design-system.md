@@ -200,4 +200,54 @@ Every FlavorTag features dual-coding: a high-contrast background plus an explici
 4. **Step 4 (1950–2600ms)**: "4. Leftover Cash Bonus" highlights unspent dollars converted to points.
 5. **Step 5 (>= 2600ms)**: Final total scores pop up, winner crown is stamped, and confetti bursts.
 
+---
+
+## 10. Accessibility & Keyboard Navigation Specifications (Phase 7)
+
+### 10.1 Keyboard Focus & High-Contrast Ring
+- All interactive controls (buttons, inputs, sliders, cards, drawer toggles) implement explicit `:focus-visible` styling:
+  - Outline: `3px solid #2563EB` (Royal Blue) with `outline-offset: 2px` and `border-radius: inherit`.
+  - Contrast ratio of `#2563EB` on default background `#FFFDF8` exceeds `4.8:1` (WCAG AA).
+  - Mouse/touch clicks suppress the outline (`:focus:not(:focus-visible)`).
+
+### 10.2 Keyboard Navigation Loop (Auction Round)
+1. **Ingredient Selection**:
+   - Each `IngredientCard` is an interactive native `<button>` element with `type="button"`.
+   - `aria-pressed="true"` when selected, `"false"` otherwise.
+   - Comprehensive `aria-label`: e.g. `"Brioche Bun, Price: $4, Taste: 6 points, Tag: Rich, Stock: 2 remaining"`.
+   - `Tab` / `Shift+Tab` navigates between cards; `Space` or `Enter` selects.
+2. **Bid Slider & Stepper**:
+   - Native `<input type="range">` with `aria-label="Bid dollar amount"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and `aria-valuetext`.
+   - `ArrowLeft` / `ArrowDown` decrements by \$1, `ArrowRight` / `ArrowUp` increments by \$1.
+   - Quick-increment buttons (`-$1`, `+$1`, `Max`) have descriptive labels.
+3. **Lock In Bid Button**:
+   - `Tab` lands on `Lock In Bid ($X)`.
+   - `Enter` submits and locks bid.
+
+### 10.3 Screen Reader Live Region (`sr-only` & `aria-live`)
+- Dedicated live region (`<div className="sr-only" aria-live="polite" aria-atomic="true">`) announces:
+  - Round phase transitions: *"Round 2: Patty Auction. 15 seconds to place your bid."*
+  - Lock confirmation: *"Your bid of $5 on Smash Beef is locked. Waiting for opponent."*
+  - Resolution outcomes: *"Round resolved! High bid collision: You won Wagyu Patty for $8. Opponent received basic fallback."*
+  - Final results: *"Match complete! Final winner: Chef Alice with 22 points to 18 points."*
+
+### 10.4 Colorblindness & Palette Invariants
+- Red-green distinction is never purely color-coded:
+  - Winner status always combines green background with text label `"WINNER"`, checkmark icon, and gold crown.
+  - Fallback loss always combines amber background with `"Free Basic"` text badge and shield icon.
+  - Basic fallback items feature distinct dashed borders and `FREE` badges.
+
+### 10.5 Share Result Spec (`PostMatchScreen`)
+- "Share Result" button (`data-testid="post-match-share-btn"`) allows 1-click clipboard copying of a clean text summary:
+  ```text
+  🍔 Bidding Kitchen Match Result
+  🏆 Winner: Chef Alice (22 pts) vs Chef Bob (18 pts)
+  🍔 Alice's Burger: The Wagyu Smokehouse Tower
+  💰 Budget Leftover: $3
+  Play Bidding Kitchen: https://biddingkitchen.com
+  ```
+- Copies to system clipboard via `navigator.clipboard.writeText` and presents a confirmation toast (`"Match summary copied to clipboard!"`).
+- Dispatches telemetry event `SHARE_CLICKED`.
+
+
 

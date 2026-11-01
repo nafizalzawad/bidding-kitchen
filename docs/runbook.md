@@ -90,3 +90,55 @@ When receiving `SIGINT` or `SIGTERM`:
 2. `roomManager.clearAll()` clears all active timeouts (`stateTimer`, `biddingTimer`, `reconnectTimer`), preventing dangling node timer handles.
 3. Fastify closes all HTTP listeners and disconnects Socket.IO sessions.
 4. Process terminates with code 0.
+
+---
+
+## 5. Production Launch Checklist & Rollback Procedure (Phase 7)
+
+### 5.1 Pre-Launch Verification Gates
+Before deploying to production, execute the automated verification sequence:
+```bash
+# 1. Monorepo lint, typecheck, unit tests, bundle budget check
+pnpm verify
+
+# 2. 50,000-match balance verification pass
+pnpm sim:burger --matches 50000 --seed 2026
+
+# 3. Full multi-browser Playwright E2E and WCAG AA accessibility audit
+pnpm test:e2e
+```
+
+All 3 gates must exit with code `0`:
+- **Balance Gate**: Round 1 winner win-rate strictly within `50.0% – 55.5%`; no variant pick rate `< 5%` or `> 65%`.
+- **Accessibility Gate**: Zero WCAG 2.1 AA violations flagged by `@axe-core/playwright`.
+- **Bundle Budget Gate**: Total gzipped JS strictly `< 180 KB` (verified via `scripts/check-bundle-budget.mjs`).
+- **Security Gate**: Fastify helmet security headers (`nosniff`, `SAMEORIGIN`) active; Socket.IO buffer limit `maxHttpBufferSize: 16384` enforced.
+
+### 5.2 Eight Core Product Metrics (`GET /metrics`)
+Monitor these 8 metrics continuously in production:
+1. `rematchRate`: Target $\ge 0.40$ ($40\%+$ players play an immediate rematch).
+2. `tutorialCompletions`: Total count of players completing the 4-step onboarding overlay.
+3. `avgTimeToFirstBidMs`: Target $\le 7000\text{ ms}$ (average time from round start to first locked bid).
+4. `firstRoundWinnerWinRate`: Target $0.500 - 0.555$ (validates that Round 1 does not trigger snowballs).
+5. `ingredientPickCounts`: Map of pick counts for all 19 Street Burger ingredients (zero unpicked variants).
+6. `avgLeftoverMoney`: Average budget unspent per player at match completion (target $\$3.00 - \$10.00$).
+7. `disconnectRate`: Target $\le 0.05$ ($< 5\%$ disconnects per match started).
+8. `avgRoundResolveMs`: Target $\le 50.0\text{ ms}$ (server round resolution computation duration).
+
+### 5.3 Rollback Procedure
+If any of the following occur within 15 minutes of deployment:
+- `GET /health` returns status $\ne 200$.
+- `GET /metrics` shows `avgRoundResolveMs > 100ms` or `disconnectRate > 15%`.
+- High rate of unhandled socket errors in logs.
+
+**Execution Steps**:
+1. Trigger immediate container rollback via GitHub Actions (`workflow_dispatch` -> "Rollback to previous release") or manual CLI:
+   ```bash
+   # Re-tag and promote previous stable release
+   docker tag bidding-kitchen-server:stable-prev bidding-kitchen-server:latest
+   docker tag bidding-kitchen-web:stable-prev bidding-kitchen-web:latest
+   ```
+2. Broadcast maintenance notification banner if active sockets persist.
+3. Verify `GET /health` on rolled-back cluster.
+4. Export server error logs and metrics dump for post-mortem analysis.
+

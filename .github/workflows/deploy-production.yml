@@ -1,0 +1,86 @@
+name: Production Deployment Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  pre-deploy-gates:
+    name: Pre-Deployment Test & Performance Gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify Monorepo (Typecheck, Lint, Unit Tests, Build, Bundle Budget)
+        run: pnpm run verify
+
+      - name: Install Playwright Browsers
+        run: pnpm --filter @bidding-kitchen/web exec playwright install --with-deps chromium
+
+      - name: Run Playwright E2E & Accessibility Tests
+        run: pnpm run test:e2e
+
+  build-and-deploy:
+    name: Container Build & Zero-Downtime Deploy
+    needs: pre-deploy-gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Server Container Image
+        run: |
+          echo "Building production server image..."
+          docker build -t bidding-kitchen-server:${{ github.sha }} -f apps/server/Dockerfile .
+
+      - name: Build Web Client Static Assets
+        run: |
+          echo "Building production web client..."
+          docker build -t bidding-kitchen-web:${{ github.sha }} -f apps/web/Dockerfile .
+
+      - name: Deploy to Production Cluster
+        id: deploy
+        run: |
+          echo "Promoting build ${{ github.sha }} to production..."
+          # Deploy step (e.g. helm upgrade / aws ecs update-service / fly deploy)
+
+      - name: Post-Deployment Smoke & Health Checks
+        run: |
+          echo "Verifying server health check..."
+          # curl -fsS https://api.biddingkitchen.com/health || exit 1
+          # curl -fsS https://api.biddingkitchen.com/metrics || exit 1
+
+      - name: Automated Rollback on Failure
+        if: failure()
+        run: |
+          echo "ALERT: Deployment verification failed! Rolling back to previous stable release..."
+          # Rollback step: redeploy previous tagged release

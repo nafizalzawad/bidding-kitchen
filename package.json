@@ -13,7 +13,8 @@
     "test": "pnpm --filter @bidding-kitchen/shared test && pnpm --filter @bidding-kitchen/server test && pnpm --filter @bidding-kitchen/web test",
     "test:e2e": "pnpm --filter @bidding-kitchen/web test:e2e",
     "sim:burger": "pnpm --filter @bidding-kitchen/shared sim:burger",
-    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "check:perf": "node scripts/check-bundle-budget.mjs",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm check:perf"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
