@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   lint-typecheck-test:
@@ -28,6 +28,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build shared workspace
+        run: pnpm --filter @bidding-kitchen/shared build
 
       - name: Run ESLint
         run: pnpm run lint

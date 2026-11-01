@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm --parallel -r run dev",
     "build": "pnpm --filter @bidding-kitchen/shared build && pnpm --filter @bidding-kitchen/server build && pnpm --filter @bidding-kitchen/web build",
-    "typecheck": "pnpm -r run typecheck",
+    "typecheck": "pnpm --filter @bidding-kitchen/shared build && pnpm -r run typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "pnpm --filter @bidding-kitchen/shared test && pnpm --filter @bidding-kitchen/server test && pnpm --filter @bidding-kitchen/web test",

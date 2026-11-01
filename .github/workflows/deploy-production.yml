@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build shared workspace
+        run: pnpm --filter @bidding-kitchen/shared build
+
       - name: Verify Monorepo (Typecheck, Lint, Unit Tests, Build, Bundle Budget)
         run: pnpm run verify
 
