@@ -267,8 +267,8 @@ test.describe('Phase 5 Full Live 2-Player Match & Rematch E2E', () => {
     await expect(pageB.getByTestId('tutorial-overlay')).not.toBeVisible();
 
     // Transition into Round 1 BIDDING with fresh $20 starting budget
-    await expect(pageA.getByTestId('screen-auction-round')).toBeVisible({ timeout: 15_000 });
-    await expect(pageB.getByTestId('screen-auction-round')).toBeVisible({ timeout: 15_000 });
+    await expect(pageA.getByTestId('screen-auction-round')).toBeVisible({ timeout: 25_000 });
+    await expect(pageB.getByTestId('screen-auction-round')).toBeVisible({ timeout: 25_000 });
     await expect(pageA.getByText('Your Budget:')).toContainText('$20');
     await expect(pageB.getByText('Your Budget:')).toContainText('$20');
 

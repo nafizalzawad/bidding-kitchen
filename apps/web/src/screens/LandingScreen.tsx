@@ -395,7 +395,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
           type="button"
           data-testid="server-settings-btn"
           onClick={() => setShowServerModal(true)}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFFFFF] border border-[#1E1B18] shadow-[0_2px_0_#1E1B18] text-xs font-bold text-[#57514A] hover:bg-[#F4EFE2] hover:text-[#1E1B18] transition cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-full bg-[#FFFFFF] border border-[#1E1B18] shadow-[0_2px_0_#1E1B18] text-xs font-bold text-[#57514A] hover:bg-[#F4EFE2] hover:text-[#1E1B18] transition cursor-pointer"
         >
           <span className="w-2 h-2 rounded-full bg-[#1D7A4C] shrink-0" />
           <span className="truncate max-w-[200px]">
@@ -425,7 +425,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                 type="button"
                 data-testid="close-server-modal-btn"
                 onClick={() => setShowServerModal(false)}
-                className="p-1 rounded-lg text-[#57514A] hover:text-[#1E1B18] hover:bg-[#F4EFE2]"
+                className="min-h-[44px] min-w-[44px] p-2 rounded-lg flex items-center justify-center text-[#57514A] hover:text-[#1E1B18] hover:bg-[#F4EFE2]"
               >
                 <X className="w-5 h-5" />
               </button>
