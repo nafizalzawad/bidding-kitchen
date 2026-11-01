@@ -175,7 +175,7 @@ test.describe('Phase 8 — v1.5 Features & Data-Driven Architecture Verification
     await expect(page.getByTestId('screen-auction-round')).toBeVisible();
     await expect(page.getByTestId('customer-order-banner')).toBeVisible();
     await expect(page.getByTestId('dish-visualizer-pizza')).toBeVisible();
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(600);
     await saveScreenshot(page, 'v15-bistro-pizza-order-mobile-sm.png');
 
     // Accessibility check on Bistro Pizza Order screen
@@ -190,7 +190,7 @@ test.describe('Phase 8 — v1.5 Features & Data-Driven Architecture Verification
     await expect(page.getByTestId('screen-auction-round')).toBeVisible();
     await expect(page.getByTestId('dish-visualizer-steak')).toBeVisible();
     await expect(page.getByTestId('chefs-tip-banner')).toBeVisible();
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(600);
     await saveScreenshot(page, 'v15-chefs-table-steak-desktop.png');
 
     // Accessibility check on Chef's Table Steak Dinner screen

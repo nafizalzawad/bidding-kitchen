@@ -55,9 +55,9 @@ export const OpponentStatusHeader: React.FC<OpponentStatusHeaderProps> = ({
         ) : (
           <span
             data-testid="opponent-thinking-badge"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#F4EFE2] text-[#1E1B18] border border-[#1E1B18] animate-pulse"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#F4EFE2] text-[#1E1B18] border border-[#1E1B18]"
           >
-            <Clock className="w-3 h-3" />
+            <Clock className="w-3 h-3 text-[#B45309] animate-pulse" />
             <span>Deciding...</span>
           </span>
         )}
