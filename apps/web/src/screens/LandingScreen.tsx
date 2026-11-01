@@ -477,7 +477,9 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                 onClick={() => {
                   try {
                     localStorage.removeItem('bk_server_url');
-                  } catch {}
+                  } catch {
+                    // Ignore storage access errors
+                  }
                   window.location.reload();
                 }}
               >
