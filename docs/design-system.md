@@ -142,3 +142,32 @@ Every FlavorTag features dual-coding: a high-contrast background plus an explici
 |  Opponent: ChefMaya ($18)          |  [      Lock In Bid ($9)         ] |
 +------------------------------------+------------------------------------+
 ```
+
+---
+
+## 8. Live Interaction & Networking UX Specifications (Phase 5)
+
+### 8.1 Deep-Link & Invite Flow (`/?room=CODE`)
+1. **Host Generation**:
+   - Creating a room displays a 6-character room code in high-contrast chunky font (`text-3xl font-extrabold tracking-widest`).
+   - "Copy Link" copies `${window.location.origin}/?room=${roomCode}` and displays a success toast (`Invite link copied!`).
+2. **Guest Opening Deep Link**:
+   - When opened with `/?room=BURG42`, `LandingScreen` switches banner mode to `"Joining Kitchen Room: BURG42"`.
+   - `data-testid="join-room-code-input"` is pre-filled with `"BURG42"`.
+   - Nickname input is pre-filled from `localStorage['bk_nickname']` (or blank if new).
+   - "Join Kitchen BURG42" CTA button is highlighted.
+
+### 8.2 Optimistic Button States
+- Interactive action buttons immediately enter a disabled, active state upon click:
+  - `Create New Kitchen` -> `"Creating Kitchen..."`
+  - `Join Kitchen` -> `"Joining Kitchen..."`
+  - `Ready Up & Start Match` -> `"Getting Ready..."`
+  - `Lock In Bid` -> `"Locking Bid..."`
+- Prevents double-clicks while Socket.IO round-trip acks return (< 30ms typical).
+
+### 8.3 Mid-Match Reconnect & Tab Refresh UX
+- On app mount, if `sessionStorage['bk_active_session']` contains `{ roomCode, playerId, reconnectToken }`, a brief `"Reconnecting to Kitchen {roomCode}..."` card is shown while `room:reconnect` executes.
+- If reconnection succeeds: Resumes active match state without layout shift. If the user had already locked a bid, restores `"Bid Locked! Waiting for Opponent..."`.
+- If reconnection fails (`ROOM_NOT_FOUND`, `ROOM_EXPIRED`, or `UNAUTHORIZED_RECONNECT`): Clears `sessionStorage`, displays a toast (`"Previous match ended or expired"`), and returns to `LandingScreen`.
+- Disconnect banner: Displays 30-second countdown in `ConnectionBanner` when opponent disconnects. Transitions to Forfeit victory screen if timeout expires.
+

@@ -8,6 +8,7 @@ import { Copy, Check, Users, Play, LogOut, Sparkles } from 'lucide-react';
 export interface LobbyScreenProps {
   match: PublicMatchView;
   myPlayerId: string;
+  isSubmitting?: boolean;
   onToggleReady?: () => void;
   onLeaveLobby?: () => void;
   onCopyInviteLink?: () => void;
@@ -16,6 +17,7 @@ export interface LobbyScreenProps {
 export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   match,
   myPlayerId,
+  isSubmitting = false,
   onToggleReady,
   onLeaveLobby,
   onCopyInviteLink,
@@ -44,9 +46,22 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   const isReady = me.ready;
   const tierDef = TIERS[match.tier] ?? TIERS.STREET;
 
-  const handleCopy = () => {
-    const inviteUrl = `${window.location.origin}/?join=${match.roomCode}`;
-    navigator.clipboard?.writeText(inviteUrl);
+  const handleCopy = async () => {
+    const inviteUrl = `${window.location.origin}/?room=${match.roomCode}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(inviteUrl);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = inviteUrl;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+    } catch {
+      // fallback copy
+    }
     setCopied(true);
     setShowToast(true);
     onCopyInviteLink?.();
@@ -68,7 +83,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
             data-testid="room-code-display"
             className="text-2xl font-black font-display tracking-widest text-[#1E1B18]"
           >
-            {match.roomCode}
+            <span data-testid="lobby-room-code">{match.roomCode}</span>
           </span>
         </div>
 
@@ -179,11 +194,13 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
           variant={isReady ? 'gold' : 'primary'}
           size="lg"
           fullWidth
-          disabled={!bothSeated}
+          disabled={!bothSeated || isSubmitting}
           onClick={onToggleReady}
           icon={isReady ? <Check className="w-5 h-5" /> : <Play className="w-5 h-5" />}
         >
-          {!bothSeated
+          {isSubmitting
+            ? 'Updating...'
+            : !bothSeated
             ? 'Waiting for Player 2...'
             : isReady
             ? 'Ready! (Click to Unready)'

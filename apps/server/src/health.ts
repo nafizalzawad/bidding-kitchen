@@ -12,6 +12,7 @@ import {
 } from '@bidding-kitchen/shared';
 import type { Server as SocketIOServer } from 'socket.io';
 import type { RoomManager } from './rooms/room-manager.js';
+import { config } from './config.js';
 
 export interface HealthResponse {
   status: 'ok';
@@ -85,5 +86,48 @@ export const healthRoutes: FastifyPluginAsync<HealthRouteOptions> = async (fasti
     };
 
     return reply.status(200).send(response);
+  });
+
+  // Admin / Test-only helper to override room timers for fast E2E testing
+  fastify.post<{
+    Body: {
+      roomCode: string;
+      reconnectWindowMs?: number;
+      biddingDurationMs?: number;
+      transitionTimerScale?: number;
+    };
+  }>('/api/test/room-timers', async (request, reply) => {
+    if (config.NODE_ENV === 'production') {
+      return reply.status(403).send({ ok: false, error: 'Forbidden in production' });
+    }
+
+    const { roomCode, reconnectWindowMs, biddingDurationMs, transitionTimerScale } =
+      request.body || {};
+    if (!roomCode) {
+      return reply.status(400).send({ ok: false, error: 'roomCode is required' });
+    }
+
+    const room = opts?.roomManager?.getRoom(roomCode);
+    if (!room) {
+      return reply.status(404).send({ ok: false, error: `Room ${roomCode} not found` });
+    }
+
+    if (typeof reconnectWindowMs === 'number') {
+      room.setReconnectWindowMs(reconnectWindowMs);
+    }
+    if (typeof biddingDurationMs === 'number') {
+      room.setBiddingDurationMs(biddingDurationMs);
+    }
+    if (typeof transitionTimerScale === 'number') {
+      room.setTransitionTimerScale(transitionTimerScale);
+    }
+
+    return reply.status(200).send({
+      ok: true,
+      roomCode,
+      reconnectWindowMs: room.match.config.reconnectWindowMs,
+      biddingDurationMs: room.match.config.biddingDurationMs,
+      transitionTimerScale: room.transitionTimerScale,
+    });
   });
 };

@@ -140,6 +140,19 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           >
             {currentStep === 3 ? "Got It, Let's Cook!" : 'Next Step'}
           </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              onComplete?.();
+              onClose();
+            }}
+            data-testid="tutorial-complete-btn"
+            aria-label="Complete tutorial and start cooking"
+            className="min-h-[44px] px-3 py-2 rounded-xl border-2 border-[#1E1B18] bg-[#FFB703] text-[#1E1B18] text-xs font-black shadow-[0_2px_0_#1E1B18] active:translate-y-[1px] transition shrink-0 cursor-pointer"
+          >
+            Skip
+          </button>
         </div>
       </div>
     </div>

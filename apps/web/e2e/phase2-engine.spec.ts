@@ -27,7 +27,7 @@ test.describe('Phase 2 Engine Sandbox Visual & Invariant Verification', () => {
       page,
     }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto('/');
+      await page.goto('/?tab=engine-sandbox');
 
       // Wait for fonts to load
       await page.evaluate(() => document.fonts.ready);
@@ -66,7 +66,7 @@ test.describe('Phase 2 Engine Sandbox Visual & Invariant Verification', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/');
+    await page.goto('/?tab=engine-sandbox');
     await page.evaluate(() => document.fonts.ready);
 
     const sandboxTab = page.getByTestId('tab-engine-sandbox');

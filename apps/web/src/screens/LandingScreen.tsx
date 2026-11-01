@@ -1,23 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/Button.js';
 import { Card } from '../components/ui/Card.js';
-import { Utensils, Users, Zap } from 'lucide-react';
+import { Utensils, Users, Zap, Sparkles } from 'lucide-react';
 
 export interface LandingScreenProps {
   initialNickname?: string;
+  initialRoomCode?: string;
+  isSubmitting?: boolean;
   onCreateRoom?: (nickname: string) => void;
   onJoinRoom?: (code: string, nickname: string) => void;
 }
 
 export const LandingScreen: React.FC<LandingScreenProps> = ({
   initialNickname = 'ChefNafiz',
+  initialRoomCode = '',
+  isSubmitting = false,
   onCreateRoom,
   onJoinRoom,
 }) => {
   const [nickname, setNickname] = useState(initialNickname);
-  const [joinCode, setJoinCode] = useState('');
+  const [joinCode, setJoinCode] = useState(initialRoomCode.toUpperCase());
   const [nicknameError, setNicknameError] = useState('');
   const [joinCodeError, setJoinCodeError] = useState('');
+
+  useEffect(() => {
+    if (initialRoomCode) {
+      setJoinCode(initialRoomCode.toUpperCase());
+    }
+  }, [initialRoomCode]);
+
+  useEffect(() => {
+    if (initialNickname) {
+      setNickname(initialNickname);
+    }
+  }, [initialNickname]);
 
   const validateNickname = (name: string): boolean => {
     const trimmed = name.trim();
@@ -34,12 +50,14 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
   };
 
   const handleCreate = () => {
+    if (isSubmitting) return;
     if (validateNickname(nickname)) {
       onCreateRoom?.(nickname.trim());
     }
   };
 
   const handleJoin = () => {
+    if (isSubmitting) return;
     const validNick = validateNickname(nickname);
     const trimmedCode = joinCode.trim().toUpperCase();
     if (!trimmedCode || trimmedCode.length < 4) {
@@ -52,6 +70,8 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
       onJoinRoom?.(trimmedCode, nickname.trim());
     }
   };
+
+  const isDeepLink = Boolean(initialRoomCode);
 
   return (
     <div
@@ -70,6 +90,19 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
           Out-bid, out-flavor, and build the champion burger in a 5-round auction battle!
         </p>
       </div>
+
+      {/* Deep Link Invite Banner if joining via URL */}
+      {isDeepLink && (
+        <div
+          data-testid="deep-link-banner"
+          className="w-full mb-4 px-4 py-3 rounded-2xl bg-[#FFB703]/25 border-2 border-[#1E1B18] shadow-[0_3px_0_#1E1B18] flex items-center justify-center gap-2 text-center"
+        >
+          <Sparkles className="w-5 h-5 text-[#FFB703] shrink-0" />
+          <span className="text-xs sm:text-sm font-black font-display text-[#1E1B18]">
+            Joining Kitchen Room: <span className="tracking-widest text-[#E63946]">{joinCode}</span>
+          </span>
+        </div>
+      )}
 
       {/* Main Action Card */}
       <Card padding="md" className="w-full mb-6">
@@ -92,25 +125,27 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
             }}
             placeholder="e.g. ChefNafiz"
             maxLength={16}
-            className="w-full min-h-[48px] px-4 rounded-xl border-2 border-[#1E1B18] bg-[#F4EFE2] text-[#1E1B18] font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#FFB703] shadow-[0_2px_0_#1E1B18]"
+            disabled={isSubmitting}
+            className="w-full min-h-[48px] px-4 rounded-xl border-2 border-[#1E1B18] bg-[#F4EFE2] text-[#1E1B18] font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#FFB703] shadow-[0_2px_0_#1E1B18] disabled:opacity-60"
           />
           {nicknameError && (
             <p className="text-xs text-[#DC2626] font-bold mt-1.5">{nicknameError}</p>
           )}
         </div>
 
-        {/* Create Room Button */}
+        {/* Create Room Button (Disabled or Secondary when in Deep Link mode) */}
         <div className="mb-5">
           <Button
             type="button"
             data-testid="create-room-btn"
-            variant="primary"
+            variant={isDeepLink ? 'secondary' : 'primary'}
             size="lg"
             fullWidth
+            disabled={isSubmitting}
             onClick={handleCreate}
             icon={<Utensils className="w-5 h-5" />}
           >
-            Create New Kitchen
+            {isSubmitting ? 'Creating Kitchen...' : 'Create New Kitchen'}
           </Button>
         </div>
 
@@ -118,7 +153,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
         <div className="relative flex items-center justify-center my-4">
           <div className="border-t-2 border-[#1E1B18] w-full" />
           <span className="bg-[#FFFFFF] px-3 text-xs font-black font-display text-[#57514A] uppercase tracking-wider absolute">
-            OR JOIN FRIEND
+            {isDeepLink ? 'OR ENTER CODE' : 'OR JOIN FRIEND'}
           </span>
         </div>
 
@@ -127,7 +162,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
           <div className="flex gap-2">
             <input
               type="text"
-              data-testid="join-code-input"
+              data-testid="join-room-code-input"
               value={joinCode}
               onChange={(e) => {
                 setJoinCode(e.target.value.toUpperCase());
@@ -135,17 +170,19 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
               }}
               placeholder="ROOM CODE"
               maxLength={6}
-              className="flex-1 min-h-[48px] px-4 rounded-xl border-2 border-[#1E1B18] bg-[#F4EFE2] text-[#1E1B18] font-black text-sm uppercase tracking-widest placeholder:normal-case placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-[#FFB703] shadow-[0_2px_0_#1E1B18]"
+              disabled={isSubmitting}
+              className="flex-1 min-h-[48px] px-4 rounded-xl border-2 border-[#1E1B18] bg-[#F4EFE2] text-[#1E1B18] font-black text-sm uppercase tracking-widest placeholder:normal-case placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-[#FFB703] shadow-[0_2px_0_#1E1B18] disabled:opacity-60"
             />
             <Button
               type="button"
-              data-testid="join-room-btn"
+              data-testid="join-room-submit-btn"
               variant="gold"
               size="md"
+              disabled={isSubmitting}
               onClick={handleJoin}
               icon={<Users className="w-4 h-4" />}
             >
-              Join
+              {isSubmitting ? 'Joining...' : isDeepLink ? `Join ${joinCode}` : 'Join'}
             </Button>
           </div>
           {joinCodeError && (
@@ -163,8 +200,8 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
           <Zap className="w-4 h-4 text-[#FFB703]" />
           <span>Quick Matchmaking Queue</span>
         </span>
-        <span className="px-2 py-0.5 rounded-full bg-[#1E1B18] text-[#FFFDF7] text-[10px] font-extrabold uppercase tracking-wider">
-          v1.5 Coming Soon
+        <span className="px-2 py-0.5 rounded-full bg-[#1E1B18] text-[#FFFDF7] text-[10px] font-black uppercase">
+          Coming in v1.5
         </span>
       </div>
     </div>

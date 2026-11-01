@@ -27,7 +27,7 @@ test.describe('Phase 1 Foundation Visual & Contract Verification', () => {
       page,
     }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto('/');
+      await page.goto('/?tab=contract-diagnostics');
 
       // Wait for fonts to be loaded
       await page.evaluate(() => document.fonts.ready);
@@ -94,7 +94,7 @@ test.describe('Phase 1 Foundation Visual & Contract Verification', () => {
   }
 
   test('verifies all 19 canonical Street Burger ingredients are listed', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?tab=contract-diagnostics');
     const contractTab = page.getByTestId('tab-contract-diagnostics');
     if (await contractTab.isVisible()) {
       await contractTab.click();

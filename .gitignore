@@ -42,3 +42,4 @@ Thumbs.db
 # Scratch and extraction files
 extracted_spec.txt
 scratch/
+*.pdf

@@ -23,7 +23,7 @@ describe('App Component (Phase 2 Engine Sandbox & Contract Diagnostic)', () => {
   });
 
   it('renders heading, app title and Live Dual-Client Inspector by default', async () => {
-    render(<App />);
+    render(<App defaultTab="INSPECTOR" />);
     expect(screen.getByTestId('app-title')).toBeInTheDocument();
     expect(screen.getByTestId('tab-live-inspector')).toBeInTheDocument();
     expect(screen.getByTestId('hidden-info-proof-badge')).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('App Component (Phase 2 Engine Sandbox & Contract Diagnostic)', () => {
   });
 
   it('switches to Contract Diagnostics tab and renders 5 FlavorTag pills and 19 Street variants', async () => {
-    render(<App />);
+    render(<App defaultTab="INSPECTOR" />);
     const contractTab = screen.getByTestId('tab-contract-diagnostics');
     fireEvent.click(contractTab);
 
@@ -64,7 +64,7 @@ describe('App Component (Phase 2 Engine Sandbox & Contract Diagnostic)', () => {
   });
 
   it('displays online server health badge when fetch succeeds', async () => {
-    render(<App />);
+    render(<App defaultTab="INSPECTOR" />);
     await waitFor(() => {
       const badge = screen.getByTestId('server-health-badge');
       expect(badge).toHaveTextContent(/online/i);

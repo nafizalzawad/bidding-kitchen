@@ -21,9 +21,12 @@ import {
 } from '@bidding-kitchen/shared';
 import { sanitizeMatchForPlayer } from './state-sanitizer.js';
 import { TimerController } from './timer-controller.js';
+import { config } from '../config.js';
 
 export interface MatchRoomOptions {
   timerScale?: number;
+  transitionTimerScale?: number;
+  biddingDurationMs?: number;
   reconnectWindowMs?: number;
   onRoomDestroyed?: (roomCode: string) => void;
   onMatchCompleted?: (match: Match) => void;
@@ -37,6 +40,8 @@ export class MatchRoom {
   public match: Match;
   public roomCode: string;
   public timerController: TimerController;
+  public transitionTimerScale: number;
+  public matchTimerScale: number;
   public socketIdsByPlayer = new Map<string, string>();
   public playerIdsBySocket = new Map<string, string>();
   private processedBidsByKey = new Map<string, Bid>();
@@ -53,7 +58,28 @@ export class MatchRoom {
     this.match = initialMatch;
     this.io = io;
     this.options = options;
-    this.timerController = new TimerController(options.timerScale ?? 1.0);
+    this.transitionTimerScale =
+      options.transitionTimerScale ?? options.timerScale ?? config.TRANSITION_TIMER_SCALE ?? 1.0;
+    this.matchTimerScale = options.timerScale ?? config.MATCH_TIMER_SCALE ?? 1.0;
+    this.timerController = new TimerController(1.0);
+  }
+
+  public setReconnectWindowMs(ms: number): void {
+    this.options.reconnectWindowMs = ms;
+    this.match.config.reconnectWindowMs = ms;
+  }
+
+  public setBiddingDurationMs(ms: number): void {
+    this.options.biddingDurationMs = ms;
+    this.match.config.biddingDurationMs = ms;
+  }
+
+  public setTransitionTimerScale(scale: number): void {
+    this.transitionTimerScale = scale;
+  }
+
+  private getTransitionDuration(state: keyof typeof STATE_TIMEOUTS_MS): number {
+    return Math.max(50, Math.round(STATE_TIMEOUTS_MS[state] * this.transitionTimerScale));
   }
 
   public bindSocket(playerId: string, socket: Socket): void {
@@ -341,9 +367,11 @@ export class MatchRoom {
     if (this.match.state !== 'TIER_CONFIRMED') {
       this.match = transitionState(this.match, 'TIER_CONFIRMED', now);
     }
+    const duration = this.getTransitionDuration('TIER_CONFIRMED');
+    this.match.stateDeadlineAt = now + duration;
     this.broadcastStateSync();
 
-    this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.TIER_CONFIRMED, () => {
+    this.timerController.set('stateTimer', duration, () => {
       this.onTierConfirmedTimeout();
     });
   }
@@ -352,9 +380,11 @@ export class MatchRoom {
     if (this.match.state !== 'TIER_CONFIRMED') return;
     const now = Date.now();
     this.match = transitionState(this.match, 'MATCH_INTRO', now);
+    const duration = this.getTransitionDuration('MATCH_INTRO');
+    this.match.stateDeadlineAt = now + duration;
     this.broadcastStateSync();
 
-    this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.MATCH_INTRO, () => {
+    this.timerController.set('stateTimer', duration, () => {
       this.onMatchIntroTimeout();
     });
   }
@@ -367,9 +397,11 @@ export class MatchRoom {
       roundIndex: 0,
     };
     this.match = transitionState(this.match, 'ROUND_REVEAL', now);
+    const duration = this.getTransitionDuration('ROUND_REVEAL');
+    this.match.stateDeadlineAt = now + duration;
     this.broadcastStateSync();
 
-    this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.ROUND_REVEAL, () => {
+    this.timerController.set('stateTimer', duration, () => {
       this.onRoundRevealTimeout();
     });
   }
@@ -378,9 +410,15 @@ export class MatchRoom {
     if (this.match.state !== 'ROUND_REVEAL') return;
     const now = Date.now();
     this.match = startRound(this.match, this.match.roundIndex, now);
+    const biddingDuration =
+      this.options.biddingDurationMs ??
+      Math.max(50, Math.round((this.match.config.biddingDurationMs ?? STATE_TIMEOUTS_MS.BIDDING) * this.matchTimerScale));
+    const currentRound = this.match.rounds[this.match.roundIndex]!;
+    currentRound.deadlineAt = now + biddingDuration;
+    this.match.stateDeadlineAt = now + biddingDuration;
     this.broadcastStateSync();
 
-    this.timerController.set('biddingTimer', STATE_TIMEOUTS_MS.BIDDING, () => {
+    this.timerController.set('biddingTimer', biddingDuration, () => {
       this.onBiddingTimeout();
     });
   }
@@ -410,9 +448,11 @@ export class MatchRoom {
     if (this.match.state !== 'LOCKED') {
       this.match = transitionState(this.match, 'LOCKED', now);
     }
+    const duration = this.getTransitionDuration('LOCKED');
+    this.match.stateDeadlineAt = now + duration;
     this.broadcastStateSync();
 
-    this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.LOCKED, () => {
+    this.timerController.set('stateTimer', duration, () => {
       this.onLockedTimeout();
     });
   }
@@ -422,6 +462,8 @@ export class MatchRoom {
     const now = Date.now();
     const { updatedMatch, resolution } = resolveRound(this.match);
     this.match = transitionState(updatedMatch, 'RESOLVE', now);
+    const duration = this.getTransitionDuration('RESOLVE');
+    this.match.stateDeadlineAt = now + duration;
 
     // Broadcast round:resolved with per-player sanitized PublicMatchView
     for (const player of this.match.players) {
@@ -436,7 +478,7 @@ export class MatchRoom {
       }
     }
 
-    this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.RESOLVE, () => {
+    this.timerController.set('stateTimer', duration, () => {
       this.onResolveTimeout();
     });
   }
@@ -445,9 +487,11 @@ export class MatchRoom {
     if (this.match.state !== 'RESOLVE') return;
     const now = Date.now();
     this.match = transitionState(this.match, 'ROUND_END', now);
+    const duration = this.getTransitionDuration('ROUND_END');
+    this.match.stateDeadlineAt = now + duration;
     this.broadcastStateSync();
 
-    this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.ROUND_END, () => {
+    this.timerController.set('stateTimer', duration, () => {
       this.onRoundEndTimeout();
     });
   }
@@ -464,20 +508,24 @@ export class MatchRoom {
         roundIndex: this.match.roundIndex + 1,
       };
       this.match = transitionState(this.match, 'ROUND_REVEAL', now);
+      const duration = this.getTransitionDuration('ROUND_REVEAL');
+      this.match.stateDeadlineAt = now + duration;
       this.broadcastStateSync();
 
-      this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.ROUND_REVEAL, () => {
+      this.timerController.set('stateTimer', duration, () => {
         this.onRoundRevealTimeout();
       });
     } else {
       // Match complete -> finalize and transition to FINAL_REVEAL
       this.match = finalizeMatch(this.match);
       this.match = transitionState(this.match, 'FINAL_REVEAL', now);
+      const duration = this.getTransitionDuration('FINAL_REVEAL');
+      this.match.stateDeadlineAt = now + duration;
       this.broadcastStateSync();
 
       this.options.onMatchCompleted?.(this.match);
 
-      this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.FINAL_REVEAL, () => {
+      this.timerController.set('stateTimer', duration, () => {
         this.onFinalRevealTimeout();
       });
     }
@@ -492,10 +540,12 @@ export class MatchRoom {
       }
     }
     this.match = transitionState(this.match, 'POST_MATCH', now);
+    const duration = STATE_TIMEOUTS_MS.POST_MATCH;
+    this.match.stateDeadlineAt = now + duration;
     this.broadcastStateSync();
 
     // Post-match room expiry after 5 minutes
-    this.timerController.set('stateTimer', STATE_TIMEOUTS_MS.POST_MATCH, () => {
+    this.timerController.set('stateTimer', duration, () => {
       this.destroy();
     });
   }

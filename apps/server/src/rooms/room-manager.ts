@@ -139,7 +139,9 @@ export class RoomManager {
     const publicView = sanitizeMatchForPlayer(room.match, playerId, now);
     const joinedPlayer = room.match.players.find((p) => p && p.id === playerId)!;
 
-    // Notify the host (Player 0) that opponent joined
+    // Notify the room that opponent joined and sync match state
+    room.broadcastStateSync();
+
     const opponent = room.match.players.find((p) => p && p.id !== playerId);
     if (opponent) {
       const opponentSocket = room.socketIdsByPlayer.get(opponent.id);

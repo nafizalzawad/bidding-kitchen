@@ -12,6 +12,8 @@ export interface ServerMetrics {
   roundResolveCount: number;
   shareClicks: number;
   firstRoundWinnerWins: number;
+  firstBidCount: number;
+  totalTimeToFirstBidMs: number;
 }
 
 export type MetricKey = keyof ServerMetrics;
@@ -29,6 +31,8 @@ export class MetricsTracker {
     roundResolveCount: 0,
     shareClicks: 0,
     firstRoundWinnerWins: 0,
+    firstBidCount: 0,
+    totalTimeToFirstBidMs: 0,
   };
 
   public increment(key: MetricKey, amount = 1): void {

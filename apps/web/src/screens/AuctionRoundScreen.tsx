@@ -119,6 +119,7 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
   return (
     <div
       data-testid="screen-auction-round"
+      data-match-state={match.state}
       className="flex-1 flex flex-col justify-between max-w-lg mx-auto w-full gap-3 py-1 sm:py-2 animate-fade-in"
     >
       {/* 1. Connection Alert Banner (if disconnected) */}

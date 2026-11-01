@@ -18,6 +18,9 @@ export default defineConfig({
       port: 3001,
       reuseExistingServer: !process.env['CI'],
       timeout: 15_000,
+      env: {
+        TRANSITION_TIMER_SCALE: '0.2',
+      },
     },
     {
       command: 'pnpm --filter @bidding-kitchen/web run dev',

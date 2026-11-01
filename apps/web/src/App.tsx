@@ -12,6 +12,9 @@ import { RefreshCw, Coins, Sparkles, Layers, ShieldCheck, Flame, Cpu, FileCheck,
 import { EngineSandboxPanel } from './components/game/EngineSandboxPanel.js';
 import { DualClientInspector } from './components/game/DualClientInspector.js';
 import { StorybookHarnessScreen } from './screens/StorybookHarnessScreen.js';
+import { LiveMatchContainer } from './screens/LiveMatchContainer.js';
+import { AppShell } from './components/layout/AppShell.js';
+import { ErrorBoundary } from './components/layout/ErrorBoundary.js';
 
 interface HealthData {
   status: string;
@@ -26,12 +29,12 @@ export interface AppProps {
   defaultTab?: 'HARNESS' | 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS';
 }
 
-export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
-  // Check URL parameters for harness or hideBar
+export const App: React.FC<AppProps> = ({ defaultTab }) => {
+  // Check URL parameters for harness or dev tabs
   const isDirectHarnessMode = (): boolean => {
     if (typeof window === 'undefined') return false;
     const params = new URLSearchParams(window.location.search);
-    return params.get('harness') === 'true' || params.has('state');
+    return params.get('harness') === 'true' || params.has('state') || params.has('tab');
   };
 
   const isHideBar = (): boolean => {
@@ -40,13 +43,34 @@ export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
     return params.get('hideBar') === 'true';
   };
 
+  // If live game (no explicit defaultTab prop and no ?harness=true / ?tab= / ?state=), render live playable app!
+  if (!isDirectHarnessMode() && !defaultTab) {
+    return (
+      <ErrorBoundary>
+        <AppShell>
+          <LiveMatchContainer />
+        </AppShell>
+      </ErrorBoundary>
+    );
+  }
+
   // If URL explicitly requests a pure screen capture without outer tabs
   if (isDirectHarnessMode() && isHideBar()) {
     return <StorybookHarnessScreen hideBarDefault={true} />;
   }
 
-  const initialTab = isDirectHarnessMode() ? 'HARNESS' : defaultTab;
-  const [activeTab, setActiveTab] = useState<'HARNESS' | 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS'>(initialTab);
+  const getInitialTab = (): 'HARNESS' | 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS' => {
+    if (typeof window === 'undefined') return defaultTab ?? 'INSPECTOR';
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'contract-diagnostics' || tab === 'contracts') return 'CONTRACTS';
+    if (tab === 'engine-sandbox' || tab === 'sandbox') return 'SANDBOX';
+    if (tab === 'live-inspector' || tab === 'inspector') return 'INSPECTOR';
+    if (params.get('harness') === 'true' || params.has('state')) return 'HARNESS';
+    return defaultTab ?? 'INSPECTOR';
+  };
+
+  const [activeTab, setActiveTab] = useState<'HARNESS' | 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS'>(getInitialTab);
   const [healthStatus, setHealthStatus] = useState<'online' | 'offline (standalone preview)'>('offline (standalone preview)');
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(false);

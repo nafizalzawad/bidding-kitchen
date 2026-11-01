@@ -19,6 +19,7 @@ export * from './engine/dish-namer.js';
 export * from './engine/scorer.js';
 export * from './engine/bid-resolver.js';
 export * from './engine/match-engine.js';
+export * from './engine/view-selectors.js';
 
 // Bot Simulation
 export * from './sim/bots.js';

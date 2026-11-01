@@ -345,6 +345,13 @@ export function registerSocketHandlers(
           globalMetrics.increment('tutorialCompletions');
         } else if (parsed.data.event === 'REMATCH_CLICKED') {
           globalMetrics.increment('rematchesStarted');
+        } else if (parsed.data.event === 'FIRST_BID_LOCKED') {
+          globalMetrics.increment('firstBidCount');
+          const ms =
+            typeof parsed.data.metadata?.['msSinceRoundStart'] === 'number'
+              ? parsed.data.metadata['msSinceRoundStart']
+              : 0;
+          globalMetrics.increment('totalTimeToFirstBidMs', ms);
         }
       }
     });

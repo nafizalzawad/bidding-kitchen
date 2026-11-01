@@ -144,4 +144,24 @@ describe('Backend Server Contracts & Schemas', () => {
       expect(RoomCodeSchema.safeParse('BURGER42').success).toBe(false);
     });
   });
+
+  describe('POST /api/test/room-timers Endpoint', () => {
+    it('returns 400 if roomCode is missing', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/test/room-timers',
+        payload: { reconnectWindowMs: 1000 },
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('returns 404 if room is not found', async () => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/test/room-timers',
+        payload: { roomCode: 'NOPE42', reconnectWindowMs: 1000 },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+  });
 });

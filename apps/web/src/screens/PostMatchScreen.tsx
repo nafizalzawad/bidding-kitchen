@@ -176,7 +176,7 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
       <div className="space-y-2.5 mt-auto pt-2">
         <Button
           type="button"
-          data-testid="rematch-btn"
+          data-testid="post-match-rematch-btn"
           variant="primary"
           size="lg"
           fullWidth

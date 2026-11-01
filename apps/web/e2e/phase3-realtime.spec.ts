@@ -27,7 +27,7 @@ test.describe('Phase 3 Realtime Authoritative Server & Dual-Client Inspector Ver
       page,
     }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto('/', { waitUntil: 'load' });
+      await page.goto('/?tab=live-inspector', { waitUntil: 'load' });
       await page.waitForLoadState('domcontentloaded');
 
       // Verify app title
@@ -67,7 +67,7 @@ test.describe('Phase 3 Realtime Authoritative Server & Dual-Client Inspector Ver
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/');
+    await page.goto('/?tab=live-inspector');
     await page.evaluate(() => document.fonts.ready);
 
     const quickStartBtn = page.getByTestId('inspector-quick-start-btn');

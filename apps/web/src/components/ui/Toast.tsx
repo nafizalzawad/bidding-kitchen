@@ -55,9 +55,11 @@ export const Toast: React.FC<ToastProps> = ({
     <div
       role="status"
       aria-live="polite"
+      data-testid="toast-container"
       className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-sm sm:max-w-md w-[calc(100%-2rem)]"
     >
       <div
+        data-testid="toast-message"
         className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border-2 border-[#1E1B18] shadow-[0_4px_0_#1E1B18] font-bold text-sm ${config.bg} ${config.text}`}
       >
         <div className="flex items-center gap-2.5 truncate">

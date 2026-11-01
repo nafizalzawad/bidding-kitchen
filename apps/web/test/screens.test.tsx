@@ -37,8 +37,8 @@ describe('Phase 4 Component & Screen Tests', () => {
       const onJoinRoom = vi.fn();
       render(<LandingScreen onJoinRoom={onJoinRoom} />);
 
-      const codeInput = screen.getByTestId('join-code-input');
-      const joinBtn = screen.getByTestId('join-room-btn');
+      const codeInput = screen.getByTestId('join-room-code-input');
+      const joinBtn = screen.getByTestId('join-room-submit-btn');
 
       // Invalid short room code
       fireEvent.change(codeInput, { target: { value: 'AB' } });
@@ -225,7 +225,7 @@ describe('Phase 4 Component & Screen Tests', () => {
       expect(screen.getByTestId('key-moment-badge')).toBeInTheDocument();
       expect(screen.getByTestId('bid-history-table')).toBeInTheDocument();
 
-      const rematchBtn = screen.getByTestId('rematch-btn');
+      const rematchBtn = screen.getByTestId('post-match-rematch-btn');
       fireEvent.click(rematchBtn);
       expect(onRequestRematch).toHaveBeenCalled();
     });
