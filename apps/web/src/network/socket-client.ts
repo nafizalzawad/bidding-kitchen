@@ -10,10 +10,36 @@ import type {
   TierId,
 } from '@bidding-kitchen/shared';
 
-const resolveDefaultServerUrl = (): string => {
+export const resolveDefaultServerUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    // 1. URL query parameter override e.g. ?server=https://my-server.onrender.com
+    const params = new URLSearchParams(window.location.search);
+    const paramServer = params.get('server');
+    if (paramServer) {
+      try {
+        localStorage.setItem('bk_server_url', paramServer);
+      } catch {
+        // ignore
+      }
+      return paramServer;
+    }
+
+    // 2. LocalStorage override
+    try {
+      const saved = localStorage.getItem('bk_server_url');
+      if (saved && saved.trim()) {
+        return saved.trim();
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Build-time Vite env variable
   if (import.meta.env.VITE_SERVER_URL) {
     return import.meta.env.VITE_SERVER_URL;
   }
+
   if (typeof window !== 'undefined' && window.location?.origin) {
     const isLocalhost =
       window.location.hostname === 'localhost' ||
@@ -37,6 +63,28 @@ export class SocketClient {
 
   constructor(serverUrl = DEFAULT_SERVER_URL) {
     this.serverUrl = serverUrl;
+  }
+
+  public getServerUrl(): string {
+    return this.serverUrl;
+  }
+
+  public setServerUrl(url: string): void {
+    const trimmed = url.trim().replace(/\/+$/, '');
+    if (!trimmed) return;
+    this.serverUrl = trimmed;
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('bk_server_url', trimmed);
+      } catch {
+        // ignore
+      }
+    }
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+    this.connect();
   }
 
   public getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
@@ -83,7 +131,8 @@ export class SocketClient {
             ok: false,
             error: {
               code: 'INVALID_STATE_ACTION',
-              message: 'Server request timed out. Please try again.',
+              message:
+                'Server request timed out. Please verify that your online game server is running and configured.',
             },
           });
         }

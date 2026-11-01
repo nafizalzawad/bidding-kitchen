@@ -40,6 +40,7 @@ export interface MatchStoreState {
   isSearchingMatch: boolean;
   matchTicketId: string | null;
   selectedTier: TierId;
+  serverUrl: string;
 }
 
 class MatchStore {
@@ -57,6 +58,7 @@ class MatchStore {
     isSearchingMatch: false,
     matchTicketId: null,
     selectedTier: 'STREET',
+    serverUrl: socketClient.getServerUrl(),
   };
 
   private listeners = new Set<() => void>();
@@ -323,6 +325,11 @@ class MatchStore {
       matchTicketId: null,
       isSubmittingAction: false,
     });
+  };
+
+  public setServerUrl = (url: string): void => {
+    socketClient.setServerUrl(url);
+    this.setState({ serverUrl: socketClient.getServerUrl() });
   };
 
   public createRoom = async (nickname: string, tier?: TierId): Promise<boolean> => {

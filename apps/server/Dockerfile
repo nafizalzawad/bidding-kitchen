@@ -9,6 +9,7 @@ FROM base AS build
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/server/package.json ./apps/server/
+COPY apps/web/package.json ./apps/web/
 RUN pnpm install --frozen-lockfile
 
 COPY packages/shared ./packages/shared

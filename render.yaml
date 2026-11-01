@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: bidding-kitchen-server
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: apps/server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        value: "*"

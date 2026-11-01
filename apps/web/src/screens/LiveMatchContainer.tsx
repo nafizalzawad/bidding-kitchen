@@ -131,6 +131,8 @@ export const LiveMatchContainer: React.FC = () => {
               onQuickMatch={store.startQuickMatch}
               onCancelQuickMatch={store.cancelQuickMatch}
               onPlayVsBot={store.createBotRoom}
+              serverUrl={storeState.serverUrl}
+              onUpdateServerUrl={store.setServerUrl}
             />
           )}
 
