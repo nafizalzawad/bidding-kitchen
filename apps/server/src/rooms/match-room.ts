@@ -1,8 +1,12 @@
 import type { Server as SocketIOServer, Socket } from 'socket.io';
 import {
   createAutoTimeoutBid,
+  createBot,
+  createPrng,
   finalizeMatch,
   forfeitMatch,
+  getBotNickname,
+  getBotThinkDelay,
   resetMatchForRematch,
   resetMatchOnLobbyLeave,
   resolveRound,
@@ -13,6 +17,8 @@ import {
   STATE_TIMEOUTS_MS,
   TIERS,
   type Bid,
+  type BotArchetype,
+  type BotDifficulty,
   type ClientToServerEvents,
   type GameError,
   type Match,
@@ -45,6 +51,11 @@ export class MatchRoom {
   public matchTimerScale: number;
   public socketIdsByPlayer = new Map<string, string>();
   public playerIdsBySocket = new Map<string, string>();
+  public botConfig?: {
+    id: string;
+    difficulty: BotDifficulty;
+    archetype: BotArchetype;
+  };
   private processedBidsByKey = new Map<string, Bid>();
   private io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
   private options: MatchRoomOptions;
@@ -327,6 +338,11 @@ export class MatchRoom {
       };
     }
 
+    const opponent = p0.id === playerId ? p1 : p0;
+    if (opponent.isBot) {
+      opponent.ready = true;
+    }
+
     if (p0.ready && p1.ready) {
       // Both clicked rematch! Reset match with seat swap and proceed to TIER_CONFIRMED
       const now = Date.now();
@@ -424,10 +440,47 @@ export class MatchRoom {
     this.timerController.set('biddingTimer', biddingDuration, () => {
       this.onBiddingTimeout();
     });
+
+    if (this.botConfig) {
+      const botDelay = Math.min(
+        biddingDuration - 50,
+        getBotThinkDelay(this.botConfig.difficulty, this.matchTimerScale),
+      );
+      this.timerController.set('botBidTimer', Math.max(10, botDelay), () => {
+        this.executeBotBid();
+      });
+    }
+  }
+
+  private executeBotBid(): void {
+    if (this.match.state !== 'BIDDING' || !this.botConfig) return;
+    const currentRound = this.match.rounds[this.match.roundIndex];
+    if (!currentRound || currentRound.bidsLockedByPlayer[this.botConfig.id]) return;
+
+    try {
+      const bot = createBot(
+        this.botConfig.id,
+        getBotNickname(this.botConfig.difficulty),
+        this.botConfig.archetype,
+      );
+      const prng = createPrng(this.match.seed + this.match.roundIndex * 71 + 13);
+      const decision = bot.decideBid(this.match, this.botConfig.id, prng);
+      const idempotencyKey = `${this.match.id}-${this.botConfig.id}-r${this.match.roundIndex}`;
+
+      this.handleLockBid(this.botConfig.id, {
+        roundIndex: this.match.roundIndex,
+        ingredientId: decision.ingredientId,
+        amount: decision.amount,
+        idempotencyKey,
+      });
+    } catch (err) {
+      console.warn('Bot bid execution failed, fallback to auto timeout bid:', err);
+    }
   }
 
   private onBiddingTimeout(): void {
     if (this.match.state !== 'BIDDING') return;
+    this.timerController.clear('botBidTimer');
     const now = Date.now();
     const currentRound = this.match.rounds[this.match.roundIndex]!;
 
@@ -447,6 +500,7 @@ export class MatchRoom {
   }
 
   private transitionToLocked(): void {
+    this.timerController.clear('botBidTimer');
     const now = Date.now();
     if (this.match.state !== 'LOCKED') {
       this.match = transitionState(this.match, 'LOCKED', now);

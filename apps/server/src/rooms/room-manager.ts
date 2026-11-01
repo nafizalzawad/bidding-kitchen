@@ -2,7 +2,10 @@ import type { Server as SocketIOServer, Socket } from 'socket.io';
 import {
   addPlayerToMatch,
   createMatch,
+  getBotArchetype,
+  getBotNickname,
   DEFAULT_V15_MATCH_CONFIG,
+  type BotDifficulty,
   type ClientToServerEvents,
   type GameError,
   type PublicMatchView,
@@ -91,6 +94,69 @@ export class RoomManager {
     });
 
     const room = new MatchRoom(roomCode, matchWithPlayer, this.io, this.options);
+    room.bindSocket(playerId, socket);
+
+    this.rooms.set(roomCode, room);
+    this.socketRoomMap.set(socket.id, roomCode);
+
+    const publicView = sanitizeMatchForPlayer(room.match, playerId, now);
+
+    return {
+      roomCode,
+      playerId,
+      reconnectToken,
+      match: publicView,
+    };
+  }
+
+  public createBotRoom(
+    creatorInfo: { nickname: string; tier: TierId; difficulty: BotDifficulty },
+    socket: Socket,
+  ): {
+    roomCode: string;
+    playerId: string;
+    reconnectToken: string;
+    match: PublicMatchView;
+  } {
+    const roomCode = this.generateRoomCode();
+    const now = Date.now();
+    const initialMatch = createMatch({
+      roomCode,
+      tier: creatorInfo.tier,
+      config: DEFAULT_V15_MATCH_CONFIG,
+      seed: Math.floor(Math.random() * 1000000),
+      now,
+    });
+
+    const playerId = `p_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    const reconnectToken = `tok_${playerId}_${Math.floor(Math.random() * 1000000)}`;
+
+    const matchWithHuman = addPlayerToMatch(initialMatch, {
+      id: playerId,
+      nickname: creatorInfo.nickname,
+      reconnectToken,
+      isBot: false,
+    });
+
+    const botId = `bot_${creatorInfo.difficulty.toLowerCase()}_${Date.now()}`;
+    const botNickname = getBotNickname(creatorInfo.difficulty);
+    const botArchetype = getBotArchetype(creatorInfo.difficulty);
+
+    const matchWithBoth = addPlayerToMatch(matchWithHuman, {
+      id: botId,
+      nickname: botNickname,
+      reconnectToken: `tok_${botId}`,
+      isBot: true,
+      botDifficulty: creatorInfo.difficulty,
+      ready: true,
+    });
+
+    const room = new MatchRoom(roomCode, matchWithBoth, this.io, this.options);
+    room.botConfig = {
+      id: botId,
+      difficulty: creatorInfo.difficulty,
+      archetype: botArchetype,
+    };
     room.bindSocket(playerId, socket);
 
     this.rooms.set(roomCode, room);

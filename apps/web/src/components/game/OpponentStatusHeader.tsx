@@ -21,12 +21,22 @@ export const OpponentStatusHeader: React.FC<OpponentStatusHeaderProps> = ({
       {/* Left: Avatar & Name */}
       <div className="flex items-center gap-2 min-w-0">
         <div className="w-8 h-8 rounded-full bg-[#FFB703] border-2 border-[#1E1B18] flex items-center justify-center font-black text-xs shrink-0 shadow-[0_1px_0_#1E1B18]">
-          👨‍🍳
+          {opponent.isBot ? '🤖' : '👨‍🍳'}
         </div>
         <div className="min-w-0">
-          <h3 className="text-xs sm:text-sm font-extrabold font-display text-[#1E1B18] truncate leading-tight">
-            {opponent.nickname}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-xs sm:text-sm font-extrabold font-display text-[#1E1B18] truncate leading-tight">
+              {opponent.nickname}
+            </h3>
+            {opponent.isBot && (
+              <span
+                data-testid="opponent-bot-pill"
+                className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-[#DBEAFE] text-[#1E40AF] border border-[#1E40AF]"
+              >
+                AI • {opponent.botDifficulty ?? 'BOT'}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1 text-[11px] font-bold text-[#57514A]">
             <Coins className="w-3 h-3 text-[#FFB703]" />
             <span className="tabular-nums">${opponent.budget} Left</span>

@@ -2,6 +2,7 @@ import { STREET_INGREDIENTS, getIngredientsBySlot } from '../data/ingredients-st
 import { TIERS } from '../data/tiers.js';
 import type {
   Bid,
+  BotDifficulty,
   Match,
   MatchConfig,
   MatchState,
@@ -86,7 +87,14 @@ export function createMatch(options: CreateMatchOptions = {}): Match {
  */
 export function addPlayerToMatch(
   match: Match,
-  playerInfo: { id: string; nickname: string; reconnectToken?: string },
+  playerInfo: {
+    id: string;
+    nickname: string;
+    reconnectToken?: string;
+    isBot?: boolean;
+    botDifficulty?: BotDifficulty;
+    ready?: boolean;
+  },
 ): Match {
   let seat: 0 | 1;
   if (match.players[0] === null) {
@@ -108,13 +116,15 @@ export function addPlayerToMatch(
     reconnectToken: playerInfo.reconnectToken ?? `tok_${playerInfo.id}`,
     nickname: playerInfo.nickname,
     seat,
-    ready: false,
+    ready: playerInfo.ready ?? false,
     connected: true,
     disconnectedAt: null,
     budget: TIERS[match.tier].startingBudget,
     dish: [],
     secretOrder,
     chefsTipGranted: false,
+    isBot: playerInfo.isBot ?? false,
+    botDifficulty: playerInfo.botDifficulty,
   };
 
   const updatedPlayers: [Player | null, Player | null] = [...match.players];

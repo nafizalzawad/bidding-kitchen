@@ -9,6 +9,7 @@ import { MatchmakingQueue } from '../rooms/matchmaking-queue.js';
 import type { RoomManager } from '../rooms/room-manager.js';
 import { RateLimiter } from './rate-limiter.js';
 import {
+  CreateBotRoomPayloadSchema,
   CreateRoomPayloadSchema,
   JoinRoomPayloadSchema,
   LockBidPayloadSchema,
@@ -53,6 +54,45 @@ export function registerSocketHandlers(
 
       const result = roomManager.createRoom(
         { nickname: nameCheck.nickname, tier: parsed.data.tier },
+        socket,
+      );
+
+      globalMetrics.increment('matchesCreated');
+
+      return ack({
+        ok: true,
+        ...result,
+      });
+    });
+
+    // 1b. room:create_bot
+    socket.on('room:create_bot', (payload, ack) => {
+      if (!rateLimiter.check(`${socket.id}:room`, 10, 60000)) {
+        return ack({
+          ok: false,
+          error: { code: 'RATE_LIMITED', message: 'Too many room requests. Please wait.' },
+        });
+      }
+
+      const parsed = CreateBotRoomPayloadSchema.safeParse(payload);
+      if (!parsed.success) {
+        return ack({
+          ok: false,
+          error: { code: 'INVALID_STATE_ACTION', message: parsed.error.issues[0]?.message || 'Invalid payload' },
+        });
+      }
+
+      const nameCheck = validateNickname(parsed.data.nickname);
+      if (!nameCheck.ok) {
+        return ack(nameCheck);
+      }
+
+      const result = roomManager.createBotRoom(
+        {
+          nickname: nameCheck.nickname,
+          tier: parsed.data.tier,
+          difficulty: parsed.data.difficulty,
+        },
         socket,
       );
 

@@ -51,6 +51,21 @@ describe('Phase 4 Component & Screen Tests', () => {
       fireEvent.click(joinBtn);
       expect(onJoinRoom).toHaveBeenCalledWith('BURG42', 'ChefNafiz');
     });
+
+    it('selects AI difficulty and triggers onPlayVsBot callback', () => {
+      const onPlayVsBot = vi.fn();
+      render(<LandingScreen onPlayVsBot={onPlayVsBot} />);
+
+      // Switch to Hard difficulty
+      const hardTab = screen.getByTestId('bot-difficulty-hard');
+      fireEvent.click(hardTab);
+
+      const playBtn = screen.getByTestId('play-vs-bot-btn');
+      expect(playBtn).toHaveTextContent(/Practice vs AI \(Hard\)/i);
+
+      fireEvent.click(playBtn);
+      expect(onPlayVsBot).toHaveBeenCalledWith('ChefNafiz', 'STREET', 'HARD');
+    });
   });
 
   // 2. LobbyScreen Tests

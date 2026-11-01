@@ -105,5 +105,7 @@ function sanitizePlayer(
     dish: player.dish,
     secretOrder,
     chefsTipGranted: player.chefsTipGranted,
+    isBot: player.isBot ?? false,
+    botDifficulty: player.botDifficulty,
   };
 }

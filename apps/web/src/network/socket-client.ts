@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import type {
   AckResponse,
   Bid,
+  BotDifficulty,
   ClientToServerEvents,
   PublicMatchView,
   ServerToClientEvents,
@@ -127,6 +128,22 @@ export class SocketClient {
   > {
     const s = this.connect();
     return this.withTimeout((cb) => s.emit('room:create', { nickname, tier }, cb));
+  }
+
+  public createBotRoom(
+    nickname: string,
+    tier: TierId = 'STREET',
+    difficulty: BotDifficulty = 'MEDIUM',
+  ): Promise<
+    AckResponse<{
+      roomCode: string;
+      playerId: string;
+      reconnectToken: string;
+      match: PublicMatchView;
+    }>
+  > {
+    const s = this.connect();
+    return this.withTimeout((cb) => s.emit('room:create_bot', { nickname, tier, difficulty }, cb));
   }
 
   public joinRoom(

@@ -142,13 +142,13 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
             <>
               <div className="flex flex-col items-center gap-1.5">
                 <div className="w-10 h-10 rounded-full bg-[#2563EB] border-2 border-[#1E1B18] flex items-center justify-center text-lg text-white shadow-[0_2px_0_#1E1B18]">
-                  👩‍🍳
+                  {p1.isBot ? '🤖' : '👩‍🍳'}
                 </div>
                 <span className="text-xs sm:text-sm font-extrabold font-display text-[#1E1B18] truncate max-w-[120px]">
                   {p1.nickname}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-[#F4EFE2] border border-[#1E1B18] text-[#1E1B18] text-[10px] font-extrabold uppercase">
-                  Guest
+                  {p1.isBot ? `AI • ${p1.botDifficulty ?? 'BOT'}` : 'Guest'}
                 </span>
               </div>
 

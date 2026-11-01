@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import type {
+  BotDifficulty,
   GameError,
   PublicMatchView,
   PublicPlayerView,
@@ -352,6 +353,44 @@ class MatchStore {
     } catch {
       this.setState({
         activeError: { code: 'INVALID_STATE_ACTION', message: 'Failed to create room' },
+        isSubmittingAction: false,
+      });
+      return false;
+    }
+  };
+
+  public createBotRoom = async (
+    nickname: string,
+    tier?: TierId,
+    difficulty: BotDifficulty = 'MEDIUM',
+  ): Promise<boolean> => {
+    this.setState({ isSubmittingAction: true, activeError: null });
+    saveNickname(nickname);
+
+    try {
+      const targetTier = tier ?? this.state.selectedTier;
+      const res = await socketClient.createBotRoom(nickname, targetTier, difficulty);
+      if (res.ok) {
+        saveActiveSession({
+          roomCode: res.roomCode,
+          playerId: res.playerId,
+          reconnectToken: res.reconnectToken,
+        });
+        this.syncUrlRoom(res.roomCode);
+        this.setState({
+          match: res.match,
+          myPlayerId: res.playerId,
+          clockOffsetMs: res.match.serverNow - Date.now(),
+          isSubmittingAction: false,
+        });
+        return true;
+      } else {
+        this.setState({ activeError: res.error, isSubmittingAction: false });
+        return false;
+      }
+    } catch {
+      this.setState({
+        activeError: { code: 'INVALID_STATE_ACTION', message: 'Failed to create bot room' },
         isSubmittingAction: false,
       });
       return false;

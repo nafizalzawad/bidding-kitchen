@@ -1,5 +1,7 @@
 export type TierId = 'STREET' | 'BISTRO' | 'CHEFS_TABLE';
 
+export type BotDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
+
 export type SlotType =
   | 'BUN'
   | 'PATTY'
@@ -100,6 +102,8 @@ export interface Player {
   dish: AwardedIngredient[];
   secretOrder: CustomerOrder | null;
   chefsTipGranted: boolean;
+  isBot?: boolean;
+  botDifficulty?: BotDifficulty;
 }
 
 export type CollisionOutcomeType =
@@ -202,6 +206,8 @@ export interface PublicPlayerView {
   dish: AwardedIngredient[];
   secretOrder: CustomerOrder | null;
   chefsTipGranted: boolean;
+  isBot?: boolean;
+  botDifficulty?: BotDifficulty;
 }
 
 export interface PublicRoundView {

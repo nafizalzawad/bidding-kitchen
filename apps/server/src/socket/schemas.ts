@@ -14,9 +14,17 @@ export const RoomCodeSchema = z
 
 export const TierIdSchema = z.enum(['STREET', 'BISTRO', 'CHEFS_TABLE']);
 
+export const BotDifficultySchema = z.enum(['EASY', 'MEDIUM', 'HARD']);
+
 export const CreateRoomPayloadSchema = z.object({
   nickname: NicknameSchema,
   tier: TierIdSchema,
+});
+
+export const CreateBotRoomPayloadSchema = z.object({
+  nickname: NicknameSchema,
+  tier: TierIdSchema,
+  difficulty: BotDifficultySchema,
 });
 
 export const JoinRoomPayloadSchema = z.object({

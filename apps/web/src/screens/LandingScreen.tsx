@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import type { TierId } from '@bidding-kitchen/shared';
+import type { BotDifficulty, TierId } from '@bidding-kitchen/shared';
 import { TIERS } from '@bidding-kitchen/shared';
 import { Button } from '../components/ui/Button.js';
 import { Card } from '../components/ui/Card.js';
-import { Utensils, Users, Zap, Sparkles, Loader2, X } from 'lucide-react';
+import { Utensils, Users, Zap, Sparkles, Loader2, X, Bot } from 'lucide-react';
 
 export interface LandingScreenProps {
   initialNickname?: string;
@@ -16,6 +16,7 @@ export interface LandingScreenProps {
   onJoinRoom?: (code: string, nickname: string) => void;
   onQuickMatch?: (nickname: string, tier: TierId) => void;
   onCancelQuickMatch?: () => void;
+  onPlayVsBot?: (nickname: string, tier: TierId, difficulty: BotDifficulty) => void;
 }
 
 export const LandingScreen: React.FC<LandingScreenProps> = ({
@@ -29,10 +30,12 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
   onJoinRoom,
   onQuickMatch,
   onCancelQuickMatch,
+  onPlayVsBot,
 }) => {
   const [nickname, setNickname] = useState(initialNickname);
   const [joinCode, setJoinCode] = useState(initialRoomCode.toUpperCase());
   const [tier, setTier] = useState<TierId>(externalTier);
+  const [botDifficulty, setBotDifficulty] = useState<BotDifficulty>('MEDIUM');
   const [nicknameError, setNicknameError] = useState('');
   const [joinCodeError, setJoinCodeError] = useState('');
 
@@ -88,6 +91,13 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
     if (isSubmitting || isSearchingMatch) return;
     if (validateNickname(nickname)) {
       onQuickMatch?.(nickname.trim(), tier);
+    }
+  };
+
+  const handlePlayVsBot = () => {
+    if (isSubmitting || isSearchingMatch) return;
+    if (validateNickname(nickname)) {
+      onPlayVsBot?.(nickname.trim(), tier, botDifficulty);
     }
   };
 
@@ -298,6 +308,73 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
             <p className="text-xs text-[#DC2626] font-bold">{joinCodeError}</p>
           )}
         </div>
+      </Card>
+
+      {/* Play vs System (Solo Practice) Card */}
+      <Card padding="md" className="w-full mb-4 bg-[#FFFFFF] border-2 border-[#1E1B18] shadow-[0_4px_0_#1E1B18]">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-7 h-7 rounded-lg bg-[#FFB703] border border-[#1E1B18] flex items-center justify-center text-sm shadow-[0_1px_0_#1E1B18]">
+            🤖
+          </div>
+          <div>
+            <h3 className="text-xs sm:text-sm font-black font-display text-[#1E1B18] uppercase tracking-wider">
+              Play vs System (Solo Practice)
+            </h3>
+          </div>
+        </div>
+        <p className="text-xs text-[#57514A] font-semibold mb-3">
+          Sharpen your recipe synergies and test high-stakes bids against our AI chef.
+        </p>
+
+        {/* Difficulty Selector Tabs */}
+        <div className="grid grid-cols-3 gap-2 mb-3" data-testid="bot-difficulty-tabs">
+          {(
+            [
+              { id: 'EASY', label: 'Easy', emoji: '🟢', desc: 'Casual bids' },
+              { id: 'MEDIUM', label: 'Medium', emoji: '🟡', desc: 'Taste seeker' },
+              { id: 'HARD', label: 'Hard', emoji: '🔴', desc: 'Smart bluff' },
+            ] as const
+          ).map((diff) => {
+            const isSelected = botDifficulty === diff.id;
+            return (
+              <button
+                key={diff.id}
+                type="button"
+                data-testid={`bot-difficulty-${diff.id.toLowerCase()}`}
+                onClick={() => setBotDifficulty(diff.id)}
+                className={`p-2 rounded-xl border-2 border-[#1E1B18] flex flex-col items-center justify-center text-center transition cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#FFB703] shadow-[0_3px_0_#1E1B18] -translate-y-0.5'
+                    : 'bg-[#F4EFE2] shadow-[0_1px_0_#1E1B18] hover:bg-[#EAE4D5]'
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">{diff.emoji}</span>
+                  <span className="text-xs font-black text-[#1E1B18] uppercase">{diff.label}</span>
+                </div>
+                <span className={`text-[10px] font-extrabold mt-0.5 ${isSelected ? 'text-[#1E1B18]' : 'text-[#57514A]'}`}>
+                  {diff.desc}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Practice vs AI Button */}
+        <Button
+          type="button"
+          data-testid="play-vs-bot-btn"
+          variant="secondary"
+          size="md"
+          fullWidth
+          disabled={isSubmitting || isSearchingMatch}
+          onClick={handlePlayVsBot}
+          icon={<Bot className="w-4 h-4 text-[#1E1B18]" />}
+        >
+          {isSubmitting
+            ? 'Starting Practice...'
+            : `Practice vs AI (${botDifficulty.charAt(0) + botDifficulty.slice(1).toLowerCase()})`}
+        </Button>
       </Card>
     </div>
   );

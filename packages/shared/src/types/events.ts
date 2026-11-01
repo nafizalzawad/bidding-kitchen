@@ -1,5 +1,6 @@
 import type {
   Bid,
+  BotDifficulty,
   PublicMatchView,
   PublicPlayerView,
   Result,
@@ -21,6 +22,17 @@ export type TelemetryEventName =
 export interface ClientToServerEvents {
   'room:create': (
     payload: { nickname: string; tier: TierId },
+    ack: (
+      res: AckResponse<{
+        roomCode: string;
+        playerId: string;
+        reconnectToken: string;
+        match: PublicMatchView;
+      }>
+    ) => void
+  ) => void;
+  'room:create_bot': (
+    payload: { nickname: string; tier: TierId; difficulty: BotDifficulty },
     ack: (
       res: AckResponse<{
         roomCode: string;

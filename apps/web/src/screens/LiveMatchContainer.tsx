@@ -130,6 +130,7 @@ export const LiveMatchContainer: React.FC = () => {
               onJoinRoom={store.joinRoom}
               onQuickMatch={store.startQuickMatch}
               onCancelQuickMatch={store.cancelQuickMatch}
+              onPlayVsBot={store.createBotRoom}
             />
           )}
 

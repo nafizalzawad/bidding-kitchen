@@ -1,4 +1,4 @@
-import type { Ingredient, Match, Player } from '../types/models.js';
+import type { BotDifficulty, Ingredient, Match, Player } from '../types/models.js';
 
 export type BotArchetype = 'RANDOM' | 'GREEDY' | 'COMBO' | 'SMART_BLUFF';
 
@@ -149,7 +149,6 @@ export function decideSmartBluffBot(match: Match, player: Player, prng: () => nu
 
   const existingTags = player.dish.flatMap((d) => d.ingredient.tags);
   const order = player.secretOrder;
-  const isRound0 = match.roundIndex === 0;
 
   // Determine player's build inclination for this match based on seed and player id
   // 0: Smokehouse (SMOKY), 1: Crunch Contrast (CRISPY + FRESH), 2: Hot & Decadent (RICH + SPICY), 3: Budget Value
@@ -265,4 +264,42 @@ export function createBot(id: string, nickname: string, archetype: BotArchetype)
       }
     },
   };
+}
+
+export function getBotArchetype(difficulty: BotDifficulty): BotArchetype {
+  switch (difficulty) {
+    case 'EASY':
+      return 'RANDOM';
+    case 'MEDIUM':
+      return 'GREEDY';
+    case 'HARD':
+      return 'SMART_BLUFF';
+  }
+}
+
+export function getBotNickname(difficulty: BotDifficulty): string {
+  switch (difficulty) {
+    case 'EASY':
+      return 'Chef Bot (Easy)';
+    case 'MEDIUM':
+      return 'Chef Bot (Medium)';
+    case 'HARD':
+      return 'Chef Bot (Hard)';
+  }
+}
+
+export function getBotThinkDelay(difficulty: BotDifficulty, timerScale = 1.0): number {
+  let baseMs: number;
+  switch (difficulty) {
+    case 'EASY':
+      baseMs = 2200;
+      break;
+    case 'MEDIUM':
+      baseMs = 1800;
+      break;
+    case 'HARD':
+      baseMs = 1200;
+      break;
+  }
+  return Math.max(20, Math.round(baseMs * timerScale));
 }
