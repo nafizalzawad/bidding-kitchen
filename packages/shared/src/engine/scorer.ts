@@ -13,7 +13,9 @@ import { generateDishName, generateWinnerTitle } from './dish-namer.js';
 import { coinFlip } from './prng.js';
 
 function extractIngredients(items: (AwardedIngredient | Ingredient)[]): Ingredient[] {
-  return items.map((item) => ('ingredient' in item ? item.ingredient : item));
+  return (items ?? [])
+    .map((item) => (item && 'ingredient' in item ? item.ingredient : item))
+    .filter((i): i is Ingredient => Boolean(i && Array.isArray(i.tags)));
 }
 
 /**

@@ -61,7 +61,7 @@ export const BudgetBar: React.FC<BudgetBarProps> = ({
           {showPill && (
             <div
               data-testid="budget-deduction-pill"
-              className={`absolute -top-3 right-0 px-1.5 py-0.5 rounded-full bg-[#E76F51] text-white font-black text-[10px] border border-[#1E1B18] shadow-[0_2px_0_#1E1B18] pointer-events-none z-10 ${
+              className={`absolute -top-3 right-0 px-1.5 py-0.5 rounded-full bg-[#B91C1C] text-white font-black text-[10px] border border-[#1E1B18] shadow-[0_2px_0_#1E1B18] pointer-events-none z-10 ${
                 prefersReducedMotion ? '' : 'animate-bounce'
               }`}
             >

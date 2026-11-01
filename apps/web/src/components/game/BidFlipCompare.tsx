@@ -116,7 +116,7 @@ export const BidFlipCompare: React.FC<BidFlipCompareProps> = ({
             {/* Bid amount */}
             <div className="my-2 px-3 py-1 rounded-xl bg-[#F4EFE2] border border-[#1E1B18] text-xs font-bold text-[#1E1B18]">
               Bid:{' '}
-              <span className="text-sm font-black text-[#E63946] tabular-nums">
+              <span className="text-sm font-black text-[#B91C1C] tabular-nums">
                 ${bid?.amount ?? 0}
               </span>
             </div>

@@ -65,7 +65,7 @@ const chipotleSauce = STREET_INGREDIENTS.find((i) => i.id === 'street_sauce_chip
 const cheddarCheese = STREET_INGREDIENTS.find((i) => i.id === 'street_cheese_aged_cheddar')!;
 const americanCheese = STREET_INGREDIENTS.find((i) => i.id === 'street_cheese_american')!;
 const baconTopping = STREET_INGREDIENTS.find((i) => i.id === 'street_topping_bacon')!;
-const picklesTopping = STREET_INGREDIENTS.find((i) => i.id === 'street_topping_pickles')!;
+const lettuceTopping = STREET_INGREDIENTS.find((i) => i.id === 'street_topping_lettuce')!;
 
 const pattyVariants: Ingredient[] = STREET_INGREDIENTS.filter((i) => i.slot === 'PATTY');
 const sauceVariants: Ingredient[] = STREET_INGREDIENTS.filter((i) => i.slot === 'SAUCE');
@@ -142,17 +142,17 @@ const r4Resolution: RoundResolution = {
   chefsTipAwardedToPlayerId: null,
 };
 
-// Round 5 Resolution (Pickles vs Bacon)
+// Round 5 Resolution (Lettuce vs Bacon)
 const r5Resolution: RoundResolution = {
   roundIndex: 4,
   slot: 'TOPPING',
   bidsByPlayer: {
-    p1: { playerId: 'p1', roundIndex: 4, ingredientId: 'street_topping_pickles', amount: 1, lockedAt: 5000, isAutoTimeoutBid: false },
+    p1: { playerId: 'p1', roundIndex: 4, ingredientId: 'street_topping_lettuce', amount: 1, lockedAt: 5000, isAutoTimeoutBid: false },
     p2: { playerId: 'p2', roundIndex: 4, ingredientId: 'street_topping_bacon', amount: 4, lockedAt: 5100, isAutoTimeoutBid: false },
   },
   outcomeType: 'NO_COLLISION',
   awardsByPlayer: {
-    p1: { roundIndex: 4, slot: 'TOPPING', ingredient: picklesTopping, wonVia: 'UNCONTESTED', pricePaid: 1 },
+    p1: { roundIndex: 4, slot: 'TOPPING', ingredient: lettuceTopping, wonVia: 'UNCONTESTED', pricePaid: 1 },
     p2: { roundIndex: 4, slot: 'TOPPING', ingredient: baconTopping, wonVia: 'UNCONTESTED', pricePaid: 4 },
   },
   budgetsBeforeRound: { p1: 3, p2: 13 },
@@ -166,7 +166,7 @@ const p1DishFull: AwardedIngredient[] = [
   { roundIndex: 1, slot: 'PATTY', ingredient: wagyu, wonVia: 'HIGH_BID', pricePaid: 9 },
   { roundIndex: 2, slot: 'SAUCE', ingredient: chipotleSauce, wonVia: 'UNCONTESTED', pricePaid: 2 },
   { roundIndex: 3, slot: 'CHEESE', ingredient: americanCheese, wonVia: 'UNCONTESTED', pricePaid: 2 },
-  { roundIndex: 4, slot: 'TOPPING', ingredient: picklesTopping, wonVia: 'UNCONTESTED', pricePaid: 1 },
+  { roundIndex: 4, slot: 'TOPPING', ingredient: lettuceTopping, wonVia: 'UNCONTESTED', pricePaid: 1 },
 ];
 
 const p2DishFull: AwardedIngredient[] = [
@@ -728,7 +728,7 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
             {
               roundIndex: 0,
               slot: 'DOUGH',
-              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_dough_woodfired')!,
+              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_dough_charred')!,
               pricePaid: 7,
               wonVia: 'UNCONTESTED',
             },
@@ -755,7 +755,7 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
             {
               roundIndex: 0,
               slot: 'DOUGH',
-              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_dough_regular')!,
+              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_dough_plain')!,
               pricePaid: 0,
               wonVia: 'FALLBACK_LOSS',
             },
@@ -822,7 +822,7 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
             {
               roundIndex: 1,
               slot: 'SIDE',
-              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_side_pommes_frites')!,
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_side_fries')!,
               pricePaid: 5,
               wonVia: 'UNCONTESTED',
             },
@@ -849,7 +849,7 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
             {
               roundIndex: 1,
               slot: 'SIDE',
-              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_side_lobster_mash')!,
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_side_mash')!,
               pricePaid: 9,
               wonVia: 'UNCONTESTED',
             },
@@ -866,7 +866,7 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
         myLockedBid: {
           playerId: 'p1',
           roundIndex: 2,
-          ingredientId: 'chef_sauce_peppercorn',
+          ingredientId: 'chef_sauce_au_poivre',
           amount: 4,
           lockedAt: Date.now() - 5000,
           isAutoTimeoutBid: false,
@@ -876,14 +876,14 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
           slot: 'STEAK_SAUCE',
           outcomeType: 'NO_COLLISION',
           bidsByPlayer: {
-            p1: { playerId: 'p1', roundIndex: 2, ingredientId: 'chef_sauce_peppercorn', amount: 4, lockedAt: Date.now() - 5000, isAutoTimeoutBid: false },
+            p1: { playerId: 'p1', roundIndex: 2, ingredientId: 'chef_sauce_au_poivre', amount: 4, lockedAt: Date.now() - 5000, isAutoTimeoutBid: false },
             p2: { playerId: 'p2', roundIndex: 2, ingredientId: 'chef_sauce_chimichurri', amount: 3, lockedAt: Date.now() - 4000, isAutoTimeoutBid: false },
           },
           awardsByPlayer: {
             p1: {
               roundIndex: 2,
               slot: 'STEAK_SAUCE',
-              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_sauce_peppercorn')!,
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_sauce_au_poivre')!,
               pricePaid: 4,
               wonVia: 'UNCONTESTED',
             },

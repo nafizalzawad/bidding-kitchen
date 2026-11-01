@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { PublicMatchView, PublicPlayerView } from '@bidding-kitchen/shared';
 import { TIERS } from '@bidding-kitchen/shared';
-import { Download, Check, Sparkles } from 'lucide-react';
+import { Download, Check } from 'lucide-react';
 import { socketClient } from '../../network/socket-client.js';
 
 export interface ShareCardCanvasProps {
@@ -109,12 +109,13 @@ export const ShareCardCanvas: React.FC<ShareCardCanvasProps> = ({
     ctx.fillText(dishName, 44, 146);
 
     // 6. Plated Ingredients List
-    const ingredients = player.dish.map((d) => d.ingredient);
-    let startX = 44;
-    let startY = 180;
+    const ingredients = (player?.dish ?? []).map((d) => d?.ingredient).filter(Boolean);
+    const startX = 44;
+    const startY = 180;
     const colWidth = 340;
 
     ingredients.forEach((ing, idx) => {
+      if (!ing) return;
       const col = idx >= 3 ? 1 : 0;
       const row = idx >= 3 ? idx - 3 : idx;
       const x = startX + col * colWidth;
@@ -133,11 +134,11 @@ export const ShareCardCanvas: React.FC<ShareCardCanvasProps> = ({
       // Slot and Name
       ctx.fillStyle = '#E2E8F0';
       ctx.font = '700 15px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`${ing.name}`, x + 20, y - 7);
+      ctx.fillText(`${ing.name ?? ing.id}`, x + 20, y - 7);
 
       ctx.fillStyle = '#94A3B8';
       ctx.font = '600 12px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`${ing.slot} • ${ing.tasteScore} pts`, x + 20, y + 8);
+      ctx.fillText(`${ing.slot ?? ''} • ${ing.tasteScore ?? 0} pts`, x + 20, y + 8);
     });
 
     // 7. Combos & Secret Order Status Badges

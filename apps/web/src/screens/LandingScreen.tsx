@@ -149,7 +149,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
               <span className="text-xs font-black uppercase tracking-tight text-[#1E1B18]">
                 {t === 'CHEFS_TABLE' ? "Chef's Table" : tDef.name}
               </span>
-              <span className="text-[10px] font-bold text-[#57514A]">
+              <span className={`text-[10px] font-extrabold ${isSelected ? 'text-[#1E1B18]' : 'text-[#57514A]'}`}>
                 ${tDef.startingBudget} • {tDef.roundsCount}R
               </span>
             </button>
