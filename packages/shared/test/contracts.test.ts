@@ -109,7 +109,7 @@ describe('@bidding-kitchen/shared Contracts & Invariants', () => {
   });
 
   it('throws descriptive error if getBasicIngredientForSlot called on slot with no basic', () => {
-    expect(() => getBasicIngredientForSlot('BISTRO', 'DOUGH')).toThrow(
+    expect(() => getBasicIngredientForSlot('STREET', 'DOUGH' as any)).toThrow(
       'No basic ingredient found for tier/slot'
     );
   });

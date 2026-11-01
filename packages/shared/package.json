@@ -17,7 +17,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "sim:burger": "tsx src/sim/cli-report.ts"
+    "sim:burger": "tsx src/sim/cli-report.ts",
+    "sim:all": "tsx src/sim/cli-report.ts --all"
   },
   "dependencies": {},
   "devDependencies": {

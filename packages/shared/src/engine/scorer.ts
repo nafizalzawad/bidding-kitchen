@@ -70,8 +70,12 @@ export function evaluateCustomerOrder(
   const ingredients = extractIngredients(items);
 
   if (order.forbiddenSlotNonBasic) {
-    const slotItem = ingredients.find((i) => i.slot === order.forbiddenSlotNonBasic);
-    const satisfied = !!slotItem && slotItem.isBasic;
+    const slotItem = ingredients.find(
+      (i) =>
+        i.slot === order.forbiddenSlotNonBasic ||
+        (order.forbiddenSlotNonBasic === 'CHEESE' && i.slot === 'PIZZA_CHEESE'),
+    );
+    const satisfied = !slotItem || slotItem.isBasic;
     return {
       completed: satisfied,
       bonusPoints: satisfied ? order.bonusPoints : 0,

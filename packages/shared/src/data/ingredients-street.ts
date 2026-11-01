@@ -1,4 +1,6 @@
 import type { Ingredient, SlotType, TierId } from '../types/models.js';
+import { BISTRO_INGREDIENTS } from './ingredients-bistro.js';
+import { CHEFS_TABLE_INGREDIENTS } from './ingredients-chefs-table.js';
 
 export const STREET_INGREDIENTS: Ingredient[] = [
   // 1. BUN (3 variants)
@@ -243,6 +245,12 @@ export const STREET_INGREDIENTS: Ingredient[] = [
 export function getIngredientsBySlot(tier: TierId, slot: SlotType): Ingredient[] {
   if (tier === 'STREET') {
     return STREET_INGREDIENTS.filter((i) => i.slot === slot);
+  }
+  if (tier === 'BISTRO') {
+    return BISTRO_INGREDIENTS.filter((i) => i.slot === slot);
+  }
+  if (tier === 'CHEFS_TABLE') {
+    return CHEFS_TABLE_INGREDIENTS.filter((i) => i.slot === slot);
   }
   return [];
 }

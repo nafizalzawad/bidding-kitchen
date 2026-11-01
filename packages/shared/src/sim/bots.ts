@@ -197,13 +197,12 @@ export function decideSmartBluffBot(match: Match, player: Player, prng: () => nu
       }
     }
 
-    // Round 1 (BUN) Budget Conservation:
-    // Human players recognize spending $4 on Brioche drops budget to $16,
-    // losing tiebreak priority on Wagyu/Smash and limiting late-game flexibility.
-    if (isRound0) {
+    // Round 1 (BUN / DOUGH) Budget Conservation:
+    // Human players recognize spending $4+ on Bun/Dough limits purchasing power on the main course.
+    if (item.slot === 'BUN' || item.slot === 'DOUGH') {
       if (item.basePrice >= 4) {
         netValue -= 1.6;
-      } else if (item.basePrice === 2) {
+      } else if (item.basePrice === 2 || item.basePrice === 3) {
         netValue += 0.4;
       }
     }
@@ -213,7 +212,7 @@ export function decideSmartBluffBot(match: Match, player: Player, prng: () => nu
 
   const scored = affordable.map((item) => ({
     item,
-    score: evaluateItemValue(item) + (prng() * 0.9 - 0.45),
+    score: evaluateItemValue(item) + (prng() * 1.8 - 0.9),
   }));
 
   scored.sort((a, b) => b.score - a.score);

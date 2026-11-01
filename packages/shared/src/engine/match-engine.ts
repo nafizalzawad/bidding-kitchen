@@ -1,4 +1,4 @@
-import { STREET_INGREDIENTS } from '../data/ingredients-street.js';
+import { STREET_INGREDIENTS, getIngredientsBySlot } from '../data/ingredients-street.js';
 import { TIERS } from '../data/tiers.js';
 import type {
   Bid,
@@ -34,23 +34,23 @@ export interface CreateMatchOptions {
 export function createMatch(options: CreateMatchOptions = {}): Match {
   const id = options.id ?? `match_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
   const roomCode = options.roomCode ?? 'BKIT';
-  const tier = options.tier ?? 'STREET';
+  const tier: TierId = options.tier ?? (options.config as { tier?: TierId } | undefined)?.tier ?? 'STREET';
   const seed = options.seed ?? 2026;
   const now = options.now ?? 0;
   const tierDef = TIERS[tier];
   const config: MatchConfig = { ...DEFAULT_MVP_MATCH_CONFIG, ...options.config };
 
-  // Initialize remaining stock from Street ingredients
+  // Initialize remaining stock from ingredients in this tier
   const remainingStock: Record<string, number> = {};
-  for (const ing of STREET_INGREDIENTS) {
-    remainingStock[ing.id] = ing.stock;
+  for (const slot of tierDef.slots) {
+    for (const ing of getIngredientsBySlot(tier, slot)) {
+      remainingStock[ing.id] = ing.stock;
+    }
   }
 
   // Initialize empty rounds based on tier slots
   const rounds: Round[] = tierDef.slots.map((slot, idx) => {
-    const availableIngredients = STREET_INGREDIENTS.filter(
-      (ing) => ing.tier === tier && ing.slot === slot,
-    );
+    const availableIngredients = getIngredientsBySlot(tier, slot);
     return {
       roundIndex: idx,
       slot,

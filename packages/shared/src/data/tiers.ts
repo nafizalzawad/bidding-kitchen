@@ -17,7 +17,7 @@ export const TIERS: Record<TierId, TierDefinition> = {
     startingBudget: 30,
     slots: ['DOUGH', 'PIZZA_SAUCE', 'PIZZA_CHEESE', 'MAIN_TOPPING', 'FINISH'],
     roundsCount: 5,
-    mvpEnabled: false,
+    mvpEnabled: true,
   },
   CHEFS_TABLE: {
     id: 'CHEFS_TABLE',
@@ -26,7 +26,7 @@ export const TIERS: Record<TierId, TierDefinition> = {
     startingBudget: 40,
     slots: ['CUT', 'SIDE', 'STEAK_SAUCE', 'GARNISH', 'DRINK', 'DESSERT'],
     roundsCount: 6,
-    mvpEnabled: false,
+    mvpEnabled: true,
   },
 } as const;
 

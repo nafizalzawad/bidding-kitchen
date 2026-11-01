@@ -51,3 +51,13 @@ export const DEFAULT_MVP_MATCH_CONFIG: MatchConfig = {
   biddingDurationMs: 15000,
   reconnectWindowMs: 30000,
 };
+
+export const DEFAULT_V15_MATCH_CONFIG: MatchConfig = {
+  stockMode: 'ALL_COLLISIONS_CONTEST',
+  uncontestedPaysBasePrice: true,
+  enableCustomerOrders: true,
+  enableChefsTip: true,
+  showOpponentBudget: true,
+  biddingDurationMs: 15000,
+  reconnectWindowMs: 30000,
+};

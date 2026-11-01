@@ -46,6 +46,8 @@ export interface SimulationReport {
     p90: number;
   };
   elapsedMs: number;
+  customerOrderCompletionRate?: number;
+  chefsTipTriggerRate?: number;
 }
 
 /**
@@ -60,6 +62,7 @@ export function simulateSingleMatch(
   const prng = createPrng(seed);
   let match = createMatch({
     seed,
+    tier: (config as any)?.tier,
     config,
     now: 1000,
   });
@@ -136,6 +139,9 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
   let round1WinnerWonMatch = 0;
   let round1DecidedMatches = 0;
   let round1TiedMatches = 0;
+  let totalCustomerOrdersCompleted = 0;
+  let totalChefsTipsTriggered = 0;
+  let roundsPerMatch = 5;
 
   const ingredientPicks: Record<string, number> = {};
   const ingredientWins: Record<string, number> = {};
@@ -153,6 +159,8 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     const seed = (baseSeed + i * 31) >>> 0;
     const { match, result } = simulateSingleMatch(botA, botB, seed, options.config);
 
+    roundsPerMatch = match.rounds.length;
+
     const scoreA = result.scoresByPlayer[botA.id]!;
     const scoreB = result.scoresByPlayer[botB.id]!;
 
@@ -161,8 +169,14 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     totalSpentA += scoreA.totalSpent;
     totalSpentB += scoreB.totalSpent;
 
+    const p0 = match.players[0]!;
+    const p1 = match.players[1]!;
+
     allScores.push(scoreA.finalScore, scoreB.finalScore);
-    allLeftovers.push(20 - scoreA.totalSpent, 20 - scoreB.totalSpent);
+    allLeftovers.push(p0.budget, p1.budget);
+
+    if (scoreA.orderCompleted) totalCustomerOrdersCompleted++;
+    if (scoreB.orderCompleted) totalCustomerOrdersCompleted++;
 
     if (result.winnerId === botA.id) {
       botAWins++;
@@ -172,11 +186,18 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
       ties++;
     }
 
-    // Collisions
+    // Collisions & Chef's Tip
+    let matchHadChefsTip = false;
     for (const res of result.roundHistory) {
       if (res.outcomeType !== 'NO_COLLISION') {
         totalCollisions++;
       }
+      if (res.chefsTipAwardedToPlayerId) {
+        matchHadChefsTip = true;
+      }
+    }
+    if (matchHadChefsTip) {
+      totalChefsTipsTriggered++;
     }
 
     // Round 1 winner correlation:
@@ -188,7 +209,7 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
       const p1Award = r1.awardsByPlayer[botB.id];
       if (p0Award && p1Award) {
         if (
-          (p0Award.ingredient.id === 'street_bun_plain' && p1Award.ingredient.id === 'street_bun_plain') ||
+          (p0Award.ingredient.isBasic && p1Award.ingredient.isBasic) ||
           p0Award.ingredient.tasteScore === p1Award.ingredient.tasteScore
         ) {
           round1TiedMatches++;
@@ -207,9 +228,6 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     }
 
     // Ingredient and combo stats
-    const p0 = match.players[0]!;
-    const p1 = match.players[1]!;
-
     for (const d of p0.dish) {
       ingredientPicks[d.ingredient.id] = (ingredientPicks[d.ingredient.id] ?? 0) + 1;
       if (result.winnerId === botA.id) {
@@ -260,7 +278,7 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
   };
 
   const elapsedMs = Date.now() - startTime;
-  const totalRounds = options.matchCount * 5;
+  const totalRounds = options.matchCount * roundsPerMatch;
 
   return {
     matchCount: options.matchCount,
@@ -287,5 +305,7 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     leftoverMoneyStats,
     scorePercentiles,
     elapsedMs,
+    customerOrderCompletionRate: totalCustomerOrdersCompleted / (options.matchCount * 2),
+    chefsTipTriggerRate: totalChefsTipsTriggered / options.matchCount,
   };
 }
