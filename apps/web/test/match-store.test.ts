@@ -18,6 +18,7 @@ import {
   type PublicPlayerView,
 } from '@bidding-kitchen/shared';
 import { matchStore } from '../src/store/match-store.js';
+import { socketClient } from '../src/network/socket-client.js';
 
 class MockStorage implements Storage {
   private store = new Map<string, string>();
@@ -45,6 +46,57 @@ const mockLocal = new MockStorage();
 const mockSession = new MockStorage();
 Object.defineProperty(window, 'localStorage', { value: mockLocal, writable: true });
 Object.defineProperty(window, 'sessionStorage', { value: mockSession, writable: true });
+
+const p0: PublicPlayerView = {
+  id: 'p0',
+  nickname: 'ChefAlice',
+  seat: 0,
+  ready: true,
+  connected: true,
+  disconnectedAt: null,
+  budget: 20,
+  dish: [],
+  secretOrder: null,
+  chefsTipGranted: false,
+};
+
+const p1: PublicPlayerView = {
+  id: 'p1',
+  nickname: 'ChefBob',
+  seat: 1,
+  ready: true,
+  connected: true,
+  disconnectedAt: null,
+  budget: 20,
+  dish: [],
+  secretOrder: null,
+  chefsTipGranted: false,
+};
+
+const mockView: PublicMatchView = {
+  id: 'm_sync',
+  roomCode: 'BURG42',
+  tier: 'STREET',
+  state: 'BIDDING',
+  config: {
+    stockMode: 'ALL_COLLISIONS_CONTEST',
+    uncontestedPaysBasePrice: true,
+    enableCustomerOrders: false,
+    enableChefsTip: false,
+    showOpponentBudget: true,
+    biddingDurationMs: 15000,
+    reconnectWindowMs: 30000,
+  },
+  roundIndex: 0,
+  myPlayerId: 'p0',
+  players: [p0, p1],
+  currentRound: null,
+  remainingStock: {},
+  result: null,
+  serverNow: 1700000005000,
+  stateEnteredAt: 1700000000000,
+  stateDeadlineAt: 1700000020000,
+};
 
 describe('Web Client Match Store & Session Storage Unit Tests', () => {
   beforeEach(() => {
@@ -91,57 +143,6 @@ describe('Web Client Match Store & Session Storage Unit Tests', () => {
   });
 
   describe('Client State Clock Offset & Selectors', () => {
-    const p0: PublicPlayerView = {
-      id: 'p0',
-      nickname: 'ChefAlice',
-      seat: 0,
-      ready: true,
-      connected: true,
-      disconnectedAt: null,
-      budget: 20,
-      dish: [],
-      secretOrder: null,
-      chefsTipGranted: false,
-    };
-
-    const p1: PublicPlayerView = {
-      id: 'p1',
-      nickname: 'ChefBob',
-      seat: 1,
-      ready: true,
-      connected: true,
-      disconnectedAt: null,
-      budget: 20,
-      dish: [],
-      secretOrder: null,
-      chefsTipGranted: false,
-    };
-
-    const mockView: PublicMatchView = {
-      id: 'm_sync',
-      roomCode: 'BURG42',
-      tier: 'STREET',
-      state: 'BIDDING',
-      config: {
-        stockMode: 'ALL_COLLISIONS_CONTEST',
-        uncontestedPaysBasePrice: true,
-        enableCustomerOrders: false,
-        enableChefsTip: false,
-        showOpponentBudget: true,
-        biddingDurationMs: 15000,
-        reconnectWindowMs: 30000,
-      },
-      roundIndex: 0,
-      myPlayerId: 'p0',
-      players: [p0, p1],
-      currentRound: null,
-      remainingStock: {},
-      result: null,
-      serverNow: 1700000005000,
-      stateEnteredAt: 1700000000000,
-      stateDeadlineAt: 1700000020000,
-    };
-
     it('correctly extracts myPlayer and opponentPlayer from view', () => {
       const me = getMyPlayerFromView(mockView);
       expect(me.id).toBe('p0');
@@ -186,6 +187,38 @@ describe('Web Client Match Store & Session Storage Unit Tests', () => {
 
       matchStore.clearError();
       expect(matchStore.getState().activeError).toBeNull();
+    });
+
+    it('leaves to home cleanly and clears match, player ID, and session', async () => {
+      saveActiveSession({ roomCode: 'BURG42', playerId: 'p0', reconnectToken: 'tok1' });
+      await matchStore.leaveToHome();
+      const state = matchStore.getState();
+      expect(state.match).toBeNull();
+      expect(state.myPlayerId).toBeNull();
+      expect(loadActiveSession()).toBeNull();
+    });
+
+    it('ignores match:state_sync and match:forfeited when user is at home without active match', () => {
+      // Ensure store has no active match
+      (matchStore as any).setState({ match: null, myPlayerId: null });
+
+      // Emit state_sync directly on the socket
+      const dummyMatch: PublicMatchView = {
+        ...mockView,
+        state: 'POST_MATCH',
+      };
+
+      if ((socketClient as any)?.getSocket) {
+        const clientSocket = (socketClient as any).getSocket();
+        // Simulate event delivery from server
+        clientSocket.emit?.('match:state_sync', { match: dummyMatch });
+        clientSocket.emit?.('match:forfeited', { match: dummyMatch });
+      }
+
+      // Store should remain null, not thrown into POST_MATCH
+      const state = matchStore.getState();
+      expect(state.match).toBeNull();
+      expect(state.myPlayerId).toBeNull();
     });
   });
 });

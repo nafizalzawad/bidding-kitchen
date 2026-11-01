@@ -158,6 +158,11 @@ export function registerSocketHandlers(
 
     // 4. room:leave
     socket.on('room:leave', (payload, ack) => {
+      const room = roomManager.getRoomBySocketId(socket.id);
+      const roomCode = room?.roomCode ?? payload?.roomCode;
+      if (roomCode) {
+        socket.leave(roomCode);
+      }
       roomManager.handleSocketDisconnect(socket.id);
       return ack({ ok: true });
     });

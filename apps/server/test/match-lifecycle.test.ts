@@ -232,4 +232,94 @@ describe('Match Lifecycle End-to-End Realtime Tests', () => {
       expect(award.ingredient.basePrice).toBe(0);
     }
   }, 10000);
+
+  it('player leaves room in POST_MATCH: cleanly leaves room without triggering forfeit', async () => {
+    const host = await createClient();
+    const guest = await createClient();
+
+    const hostRes = await new Promise<any>((resolve) => {
+      host.emit('room:create', { nickname: 'HostChef', tier: 'STREET' }, (ack) => resolve(ack));
+    });
+    const roomCode = hostRes.roomCode;
+
+    await new Promise<any>((resolve) => {
+      guest.emit('room:join', { roomCode, nickname: 'GuestChef' }, (ack) => resolve(ack));
+    });
+
+    await new Promise<any>((resolve) => {
+      host.emit('lobby:ready', { roomCode, ready: true }, (ack) => resolve(ack));
+    });
+    await new Promise<any>((resolve) => {
+      guest.emit('lobby:ready', { roomCode, ready: true }, (ack) => resolve(ack));
+    });
+
+    // Play through 5 rounds to POST_MATCH
+    for (let r = 0; r < 5; r++) {
+      const currentBidding = await waitForState(host, (m) => m.state === 'BIDDING');
+      const basicIng = currentBidding.currentRound!.availableIngredients.find((i) => i.isBasic)!;
+
+      await Promise.all([
+        new Promise<any>((resolve) => {
+          host.emit(
+            'bid:lock',
+            {
+              roomCode,
+              roundIndex: r,
+              ingredientId: basicIng.id,
+              amount: 0,
+              idempotencyKey: `h_r${r}_leave_test`,
+            },
+            (ack) => resolve(ack)
+          );
+        }),
+        new Promise<any>((resolve) => {
+          guest.emit(
+            'bid:lock',
+            {
+              roomCode,
+              roundIndex: r,
+              ingredientId: basicIng.id,
+              amount: 0,
+              idempotencyKey: `g_r${r}_leave_test`,
+            },
+            (ack) => resolve(ack)
+          );
+        }),
+      ]);
+    }
+
+    // Wait for POST_MATCH
+    const postMatchState = await waitForState(host, (m) => m.state === 'POST_MATCH', 8000);
+    expect(postMatchState.state).toBe('POST_MATCH');
+    const originalWinner = postMatchState.result?.winnerId;
+
+    // Set up broadcast listener on host to verify no stray state_sync or forfeit arrives after leaving
+    let straySyncReceived = false;
+    let forfeitReceived = false;
+    host.on('match:state_sync', () => {
+      straySyncReceived = true;
+    });
+    host.on('match:forfeited', () => {
+      forfeitReceived = true;
+    });
+
+    // Host navigates Home (room:leave)
+    const leaveRes = await new Promise<any>((resolve) => {
+      host.emit('room:leave', { roomCode }, (ack) => resolve(ack));
+    });
+    expect(leaveRes.ok).toBe(true);
+
+    // Wait 500ms to ensure no timers trigger a forfeit or stray sync
+    await new Promise((r) => setTimeout(r, 500));
+
+    expect(straySyncReceived).toBe(false);
+    expect(forfeitReceived).toBe(false);
+
+    // Check server room state: host is detached from room, room has not forfeited
+    const room = roomManager.getRoom(roomCode);
+    if (room) {
+      expect(room.match.result?.winReason).not.toBe('FORFEIT');
+      expect(room.match.result?.winnerId).toBe(originalWinner);
+    }
+  }, 15000);
 });

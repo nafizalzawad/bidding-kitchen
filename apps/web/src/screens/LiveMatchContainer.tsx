@@ -118,7 +118,7 @@ export const LiveMatchContainer: React.FC = () => {
           transition={transitionConfig}
           className="flex-1 flex flex-col w-full"
         >
-          {!match && (
+          {(!match || !myPlayerId) && (
             <LandingScreen
               initialNickname={getSavedNickname() || 'Chef'}
               initialRoomCode={urlRoomCode}
@@ -136,10 +136,10 @@ export const LiveMatchContainer: React.FC = () => {
             />
           )}
 
-          {match && (match.state === 'LOBBY' || match.state === 'TIER_CONFIRMED') && (
+          {match && myPlayerId && (match.state === 'LOBBY' || match.state === 'TIER_CONFIRMED') && (
             <LobbyScreen
               match={match}
-              myPlayerId={myPlayerId ?? ''}
+              myPlayerId={myPlayerId}
               isSubmitting={isSubmittingAction}
               onToggleReady={store.toggleReady}
               onSelectTier={store.selectTier}
@@ -147,7 +147,7 @@ export const LiveMatchContainer: React.FC = () => {
             />
           )}
 
-          {match && match.state === 'MATCH_INTRO' && (
+          {match && myPlayerId && match.state === 'MATCH_INTRO' && (
             <MatchIntroScreen
               match={match}
               countdownSeconds={countdownSeconds}
@@ -155,6 +155,7 @@ export const LiveMatchContainer: React.FC = () => {
           )}
 
           {match &&
+            myPlayerId &&
             (match.state === 'ROUND_REVEAL' ||
               match.state === 'BIDDING' ||
               match.state === 'LOCKED' ||
@@ -163,25 +164,25 @@ export const LiveMatchContainer: React.FC = () => {
               <AuctionRoundScreen
                 key={`round-${match.roundIndex}`}
                 match={match}
-                myPlayerId={myPlayerId ?? ''}
+                myPlayerId={myPlayerId}
                 countdownSeconds={countdownSeconds}
                 stateRemainingMs={remainingMs}
                 onLockBid={store.lockBid}
               />
             )}
 
-          {match && match.state === 'FINAL_REVEAL' && (
+          {match && myPlayerId && match.state === 'FINAL_REVEAL' && (
             <FinalRevealScreen
               match={match}
-              myPlayerId={myPlayerId ?? ''}
+              myPlayerId={myPlayerId}
               onProceed={() => {}}
             />
           )}
 
-          {match && match.state === 'POST_MATCH' && (
+          {match && myPlayerId && match.state === 'POST_MATCH' && (
             <PostMatchScreen
               match={match}
-              myPlayerId={myPlayerId ?? ''}
+              myPlayerId={myPlayerId}
               onRequestRematch={store.rematch}
               onReturnHome={store.leaveToHome}
               onShare={store.trackShare}

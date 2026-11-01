@@ -170,6 +170,15 @@ class MatchStore {
     });
 
     socket.on('match:state_sync', ({ match }) => {
+      // Ignore background state syncs if the player is not currently in a room / has left to home
+      if (!this.state.match || !this.state.myPlayerId) {
+        return;
+      }
+      // Ignore syncs for a different room
+      if (this.state.match.roomCode !== match.roomCode) {
+        return;
+      }
+
       const now = Date.now();
       const clockOffsetMs = match.serverNow - now;
 
@@ -194,6 +203,7 @@ class MatchStore {
     });
 
     socket.on('lobby:opponent_joined', ({ player }) => {
+      if (!this.state.match || !this.state.myPlayerId) return;
       this.setState((prev) => {
         if (!prev.match) {
           return { toastMessage: `${player.nickname} joined the kitchen!` };
@@ -211,6 +221,7 @@ class MatchStore {
     });
 
     socket.on('lobby:opponent_left', ({ message, match }) => {
+      if (!this.state.match || !this.state.myPlayerId) return;
       this.setState({
         match,
         toastMessage: message || 'Opponent left the lobby.',
@@ -218,6 +229,7 @@ class MatchStore {
     });
 
     socket.on('round:player_locked', ({ playerId }) => {
+      if (!this.state.match || !this.state.myPlayerId) return;
       this.setState((prev) => {
         if (!prev.match?.currentRound) return {};
         return {
@@ -236,6 +248,8 @@ class MatchStore {
     });
 
     socket.on('round:resolved', ({ match }) => {
+      if (!this.state.match || !this.state.myPlayerId) return;
+      if (this.state.match.roomCode !== match.roomCode) return;
       const now = Date.now();
       this.setState({
         match,
@@ -244,12 +258,15 @@ class MatchStore {
     });
 
     socket.on('player:connection_changed', ({ playerId, reconnectDeadlineAt }) => {
+      if (!this.state.match || !this.state.myPlayerId) return;
       if (playerId !== this.state.myPlayerId) {
         this.setState({ opponentReconnectDeadlineAt: reconnectDeadlineAt });
       }
     });
 
     socket.on('match:forfeited', ({ match }) => {
+      if (!this.state.match || !this.state.myPlayerId) return;
+      if (this.state.match.roomCode !== match.roomCode) return;
       this.setState({
         match,
         opponentReconnectDeadlineAt: null,
@@ -527,9 +544,7 @@ class MatchStore {
   };
 
   public leaveToHome = async (): Promise<void> => {
-    if (this.state.match) {
-      await socketClient.leaveRoom(this.state.match.roomCode);
-    }
+    const roomCode = this.state.match?.roomCode;
     clearActiveSession();
     this.clearUrlRoom();
     this.setState({
@@ -540,6 +555,13 @@ class MatchStore {
       activeError: null,
       toastMessage: null,
     });
+    if (roomCode) {
+      try {
+        await socketClient.leaveRoom(roomCode);
+      } catch (e) {
+        console.warn('Failed to emit room:leave', e);
+      }
+    }
   };
 
   public trackShare = (): void => {

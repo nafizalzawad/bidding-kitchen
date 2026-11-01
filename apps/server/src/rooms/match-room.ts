@@ -256,7 +256,29 @@ export class MatchRoom {
       return;
     }
 
-    // In active match (MATCH_INTRO through FINAL_REVEAL): start 30s reconnect window
+    // In POST_MATCH or FINAL_REVEAL: Cleanly detach player; match is completed
+    if (this.match.state === 'POST_MATCH' || this.match.state === 'FINAL_REVEAL') {
+      this.socketIdsByPlayer.delete(playerId);
+      this.playerIdsBySocket.delete(socketId);
+
+      const player = this.match.players.find((p) => p && p.id === playerId);
+      if (player) {
+        player.connected = false;
+        player.disconnectedAt = now;
+      }
+
+      // If all human players have departed, destroy the completed room
+      const remainingHumanSockets = this.match.players.some((p) => {
+        if (!p || p.isBot) return false;
+        return this.socketIdsByPlayer.has(p.id);
+      });
+      if (!remainingHumanSockets) {
+        this.destroy();
+      }
+      return;
+    }
+
+    // In active match (MATCH_INTRO through ROUND_END): start 30s reconnect window
     const player = this.match.players.find((p) => p && p.id === playerId);
     if (!player) return;
 
@@ -617,6 +639,9 @@ export class MatchRoom {
   }
 
   private handleForfeitOnReconnectTimeout(disconnectedPlayerId: string): void {
+    if (this.match.state === 'POST_MATCH' || this.match.state === 'FINAL_REVEAL') {
+      return;
+    }
     const now = Date.now();
     this.match = forfeitMatch(this.match, disconnectedPlayerId, now);
     globalMetrics.increment('matchesForfeited');
