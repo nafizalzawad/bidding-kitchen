@@ -17,3 +17,13 @@
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Accessible high-contrast focus rings */
+:focus-visible {
+  outline: 3px solid #2563EB !important;
+  outline-offset: 2px !important;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}

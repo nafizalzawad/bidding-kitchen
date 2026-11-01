@@ -424,6 +424,10 @@ class MatchStore {
     });
   };
 
+  public trackShare = (): void => {
+    socketClient.trackTelemetry('SHARE_CLICKED');
+  };
+
   public clearToast = (): void => {
     this.setState({ toastMessage: null });
   };

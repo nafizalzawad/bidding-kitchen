@@ -3,7 +3,8 @@ import type { PublicMatchView } from '@bidding-kitchen/shared';
 import { generateDishName } from '@bidding-kitchen/shared';
 import { Button } from '../components/ui/Button.js';
 import { Card } from '../components/ui/Card.js';
-import { Trophy, RefreshCw, Layers, Home, ChevronDown, ChevronUp, Swords } from 'lucide-react';
+import { Trophy, RefreshCw, Layers, Home, ChevronDown, ChevronUp, Swords, Share2 } from 'lucide-react';
+import { Toast } from '../components/ui/Toast.js';
 
 export interface PostMatchScreenProps {
   match: PublicMatchView;
@@ -11,6 +12,7 @@ export interface PostMatchScreenProps {
   onRequestRematch?: () => void;
   onNewTier?: () => void;
   onReturnHome?: () => void;
+  onShare?: () => void;
 }
 
 export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
@@ -19,8 +21,10 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
   onRequestRematch,
   onNewTier,
   onReturnHome,
+  onShare,
 }) => {
   const [showHistory, setShowHistory] = useState(true);
+  const [showShareToast, setShowShareToast] = useState(false);
 
   const result = match.result;
   const p0 = match.players[0]!;
@@ -50,6 +54,23 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
       }
     });
   });
+
+  const handleShare = async () => {
+    const winnerDishName = winner.id === p0.id ? p0DishName : p1DishName;
+    const winnerScoreVal = winner.id === p0.id ? p0Score?.finalScore : p1Score?.finalScore;
+    const text = `🍔 Bidding Kitchen Match Result\n🏆 Winner: ${winner.nickname} (${winnerScoreVal ?? 0} pts)\n🍔 Dish: ${winnerDishName}\n💰 Budget Leftover: $${winner.budget}\nPlay Bidding Kitchen: ${typeof window !== 'undefined' ? window.location.origin : 'https://biddingkitchen.com'}`;
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      }
+    } catch {
+      // safe fallback
+    }
+
+    setShowShareToast(true);
+    onShare?.();
+  };
 
   return (
     <div
@@ -147,10 +168,10 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
                         R{h.roundIndex + 1}: {h.slot}
                       </td>
                       <td className="p-2 sm:p-2.5 text-[#1E1B18]">
-                        <span className="font-black text-[#E63946]">${b0?.amount ?? 0}</span> ({a0?.ingredient?.name ?? 'Basic'})
+                        <span className="font-black text-[#DC2626]">${b0?.amount ?? 0}</span> ({a0?.ingredient?.name ?? 'Basic'})
                       </td>
                       <td className="p-2 sm:p-2.5 text-[#1E1B18]">
-                        <span className="font-black text-[#E63946]">${b1?.amount ?? 0}</span> ({a1?.ingredient?.name ?? 'Basic'})
+                        <span className="font-black text-[#DC2626]">${b1?.amount ?? 0}</span> ({a1?.ingredient?.name ?? 'Basic'})
                       </td>
                       <td className="p-2 sm:p-2.5">
                         {hadCollision ? (
@@ -174,6 +195,18 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
 
       {/* Action Buttons: Rematch, Change Tier, Return Home */}
       <div className="space-y-2.5 mt-auto pt-2">
+        <Button
+          type="button"
+          data-testid="post-match-share-btn"
+          variant="secondary"
+          size="lg"
+          fullWidth
+          onClick={handleShare}
+          icon={<Share2 className="w-5 h-5 text-[#2563EB]" />}
+        >
+          Share Result
+        </Button>
+
         <Button
           type="button"
           data-testid="post-match-rematch-btn"
@@ -210,6 +243,14 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Share Toast */}
+      <Toast
+        isOpen={showShareToast}
+        message="Match summary copied to clipboard!"
+        type="success"
+        onClose={() => setShowShareToast(false)}
+      />
     </div>
   );
 };

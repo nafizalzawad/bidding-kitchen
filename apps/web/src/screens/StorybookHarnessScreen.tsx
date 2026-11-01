@@ -146,7 +146,7 @@ export const StorybookHarnessScreen: React.FC<StorybookHarnessScreenProps> = ({
                   type="button"
                   onClick={() => setHideBar(true)}
                   title="Hide dev bar for pure visual screenshot"
-                  aria-label="Hide developer switcher bar"
+                  aria-label="Hide Bar"
                   className="ml-2 px-2 py-1 rounded-md bg-[#2C3140] hover:bg-[#57514A] text-[#FFFDF7] flex items-center gap-1 cursor-pointer"
                 >
                   <EyeOff className="w-3 h-3" />

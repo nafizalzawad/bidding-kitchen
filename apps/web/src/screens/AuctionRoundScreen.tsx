@@ -210,12 +210,32 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
   const currentBudget = me.budget ?? 0;
   const previousBudget = currentBudget + deductionAmount;
 
+  const liveAnnouncement = (() => {
+    if (isResolve && currentRound?.resolution) {
+      const myAward = currentRound.resolution.awardsByPlayer[me.id];
+      const name = myAward?.ingredient?.name ?? 'an ingredient';
+      const outcome = currentRound.resolution.outcomeType;
+      return `Round resolved! Outcome: ${outcome}. You received ${name}.`;
+    }
+    if (isRoundEnd) {
+      return `Round ${roundNum} complete. Ingredients plated.`;
+    }
+    if (myLocked) {
+      return `Your bid of $${bidAmount} is locked. Waiting for opponent.`;
+    }
+    return `Round ${roundNum} of 5: ${slotName} auction. Remaining budget: $${myBudget}.`;
+  })();
+
   return (
     <div
       data-testid="screen-auction-round"
       data-match-state={match.state}
       className="flex-1 flex flex-col justify-between max-w-lg mx-auto w-full gap-3 py-1 sm:py-2 animate-fade-in"
     >
+      {/* Screen Reader Live Announcer */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true" data-testid="sr-live-announcer">
+        {liveAnnouncement}
+      </div>
       {/* 1. Connection Alert Banner (if disconnected) */}
       <ConnectionBanner
         opponentDisconnected={!opponent.connected}

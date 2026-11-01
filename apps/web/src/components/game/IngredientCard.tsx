@@ -36,6 +36,11 @@ export const IngredientCard: React.FC<IngredientCardProps> = ({
   const isBasic = ingredient.isBasic;
   const isScarce = ingredient.stock === 1;
 
+  const tagsText = ingredient.tags.length > 0 ? `, Tags: ${ingredient.tags.join(', ')}` : '';
+  const priceText = isBasic ? 'Free ($0)' : `$${ingredient.basePrice} base price`;
+  const stockText = isScarce ? ', Only 1 remaining' : '';
+  const ariaLabel = `${ingredient.name}, ${priceText}, ${ingredient.tasteScore} taste points${tagsText}${stockText}${selected ? ', selected' : ''}${disabled ? `, disabled: ${disabledReason || 'unavailable'}` : ''}`;
+
   const motionProps = prefersReducedMotion
     ? {
         initial: { opacity: 0 },
@@ -95,7 +100,7 @@ export const IngredientCard: React.FC<IngredientCardProps> = ({
         {isScarce && (
           <span
             data-testid={`stock-badge-${ingredient.id}`}
-            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E63946] text-[#FFFDF7] border border-[#1E1B18]"
+            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DC2626] text-[#FFFDF7] border border-[#1E1B18]"
           >
             Only 1!
           </span>
@@ -109,7 +114,7 @@ export const IngredientCard: React.FC<IngredientCardProps> = ({
           <h4 className="text-xs sm:text-sm font-extrabold font-display text-[#1E1B18] truncate leading-tight">
             {ingredient.name}
           </h4>
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1D7A4C]">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#155E38]">
             <Sparkles className="w-3 h-3 text-[#FFB703]" />
             <span>+{ingredient.tasteScore} Taste</span>
           </span>

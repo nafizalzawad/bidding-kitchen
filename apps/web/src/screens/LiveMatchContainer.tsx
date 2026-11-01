@@ -174,6 +174,7 @@ export const LiveMatchContainer: React.FC = () => {
               myPlayerId={myPlayerId ?? ''}
               onRequestRematch={store.rematch}
               onReturnHome={store.leaveToHome}
+              onShare={store.trackShare}
             />
           )}
         </motion.div>

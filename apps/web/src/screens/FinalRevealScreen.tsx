@@ -36,6 +36,7 @@ export const FinalRevealScreen: React.FC<FinalRevealScreenProps> = ({
   const p1Score = result?.scoresByPlayer[p1.id];
 
   const winner = (p0.id === result?.winnerId ? p0 : p1) ?? p1;
+  const winnerScore = winner.id === p0.id ? p0Score : p1Score;
 
   const p0DishName = p0Score?.generatedDishName ?? generateDishName(p0.dish);
   const p1DishName = p1Score?.generatedDishName ?? generateDishName(p1.dish);
@@ -116,8 +117,17 @@ export const FinalRevealScreen: React.FC<FinalRevealScreenProps> = ({
         data-step={step}
         className="sr-only"
         aria-live="polite"
+        aria-atomic="true"
       >
         Step {step} of 5
+      </div>
+      <div
+        data-testid="sr-live-announcer"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {`Match reveal step ${step} of 5: ${winner.nickname} wins with ${winnerScore?.finalScore ?? 0} points!`}
       </div>
 
       {/* Title Header */}

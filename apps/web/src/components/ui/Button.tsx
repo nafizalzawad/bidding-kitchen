@@ -24,7 +24,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const variantStyles: Record<ButtonVariant, string> = {
     primary:
-      'bg-[#E63946] text-[#FFFFFF] hover:bg-[#d52b38] border-2 border-[#1E1B18] shadow-[0_4px_0_#1E1B18] active:translate-y-[2px] active:shadow-[0_2px_0_#1E1B18]',
+      'bg-[#DC2626] text-[#FFFFFF] hover:bg-[#b91c1c] border-2 border-[#1E1B18] shadow-[0_4px_0_#1E1B18] active:translate-y-[2px] active:shadow-[0_2px_0_#1E1B18]',
     secondary:
       'bg-[#FFFFFF] text-[#1E1B18] hover:bg-[#F4EFE2] border-2 border-[#1E1B18] shadow-[0_4px_0_#1E1B18] active:translate-y-[2px] active:shadow-[0_2px_0_#1E1B18]',
     gold:

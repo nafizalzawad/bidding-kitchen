@@ -62,7 +62,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 type="button"
                 onClick={() => setIsComboDrawerOpen(true)}
                 aria-label="View flavor combos"
-                data-testid="header-combos-btn"
+                data-testid="combos-toggle-btn"
                 className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl border-2 border-[#1E1B18] bg-[#FFFFFF] hover:bg-[#F4EFE2] text-[#1E1B18] shadow-[0_3px_0_#1E1B18] active:translate-y-[1px] active:shadow-[0_1px_0_#1E1B18] transition flex items-center gap-1.5 font-bold text-xs cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-[#FFB703]" />

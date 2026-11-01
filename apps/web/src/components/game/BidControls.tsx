@@ -119,7 +119,7 @@ export const BidControls: React.FC<BidControlsProps> = ({
                 <span>Your Bid:</span>
                 <span
                   data-testid="bid-amount-display"
-                  className="text-lg font-black text-[#E63946] tabular-nums"
+                  className="text-lg font-black text-[#DC2626] tabular-nums"
                 >
                   ${isBasic ? 0 : bidAmount}
                 </span>
@@ -139,7 +139,11 @@ export const BidControls: React.FC<BidControlsProps> = ({
                     max={maxBid}
                     value={bidAmount}
                     onChange={handleSliderChange}
-                    aria-label="Bid amount slider"
+                    aria-label="Bid dollar amount"
+                    aria-valuemin={minBid}
+                    aria-valuemax={maxBid}
+                    aria-valuenow={bidAmount}
+                    aria-valuetext={`$${bidAmount}`}
                     className="w-full h-2 bg-[#F4EFE2] rounded-lg appearance-none cursor-pointer accent-[#E63946] border border-[#1E1B18]"
                   />
                 )}
