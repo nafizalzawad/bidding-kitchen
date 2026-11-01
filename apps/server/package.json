@@ -15,6 +15,7 @@
   "dependencies": {
     "@bidding-kitchen/shared": "workspace:*",
     "@fastify/cors": "^10.0.2",
+    "@fastify/helmet": "^13.2.0",
     "fastify": "^5.2.1",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",

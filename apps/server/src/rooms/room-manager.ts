@@ -20,6 +20,7 @@ export class RoomManager {
   private socketRoomMap = new Map<string, string>(); // socketId -> roomCode
   private io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
   private options: MatchRoomOptions;
+  private sweepTimer: NodeJS.Timeout | null = null;
 
   constructor(
     io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>,
@@ -33,6 +34,13 @@ export class RoomManager {
         options.onRoomDestroyed?.(roomCode);
       },
     };
+
+    this.sweepTimer = setInterval(() => {
+      this.sweepExpiredRooms();
+    }, 60_000);
+    if (this.sweepTimer.unref) {
+      this.sweepTimer.unref();
+    }
   }
 
   /**
@@ -196,7 +204,44 @@ export class RoomManager {
     return this.rooms.size;
   }
 
+  /**
+   * Sweeps and cleans up expired or abandoned rooms.
+   * Returns the count of swept rooms.
+   */
+  public sweepExpiredRooms(now: number = Date.now()): number {
+    let swept = 0;
+    for (const [code, room] of Array.from(this.rooms.entries())) {
+      const match = room.match;
+      const isPostMatchExpired =
+        match.state === 'POST_MATCH' && match.stateDeadlineAt > 0 && now >= match.stateDeadlineAt;
+      const isDeadlinedOut =
+        match.stateDeadlineAt > 0 && now >= match.stateDeadlineAt + 60_000;
+
+      const allPlayersDisconnected =
+        match.players.length > 0 &&
+        match.players.every(
+          (p) => !p || (!p.connected && now - (p.disconnectedAt ?? now) > 60_000),
+        );
+
+      if (isPostMatchExpired || isDeadlinedOut || allPlayersDisconnected) {
+        room.destroy();
+        this.rooms.delete(code);
+        for (const [sId, rCode] of Array.from(this.socketRoomMap.entries())) {
+          if (rCode === code) {
+            this.socketRoomMap.delete(sId);
+          }
+        }
+        swept++;
+      }
+    }
+    return swept;
+  }
+
   public clearAll(): void {
+    if (this.sweepTimer) {
+      clearInterval(this.sweepTimer);
+      this.sweepTimer = null;
+    }
     for (const room of this.rooms.values()) {
       room.destroy();
     }

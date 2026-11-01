@@ -251,6 +251,7 @@ export class MatchRoom {
 
     player.connected = false;
     player.disconnectedAt = now;
+    globalMetrics.increment('totalDisconnects');
 
     const reconnectWindowMs = this.options.reconnectWindowMs ?? RECONNECT_WINDOW_MS;
     const deadlineAt = now + reconnectWindowMs;
@@ -381,6 +382,7 @@ export class MatchRoom {
     if (this.match.state !== 'TIER_CONFIRMED') return;
     const now = Date.now();
     this.match = transitionState(this.match, 'MATCH_INTRO', now);
+    globalMetrics.increment('matchesStarted');
     const duration = this.getTransitionDuration('MATCH_INTRO');
     this.match.stateDeadlineAt = now + duration;
     this.broadcastStateSync();
@@ -526,6 +528,7 @@ export class MatchRoom {
       this.match = finalizeMatch(this.match);
       const resultDuration = performance.now() - tResult0;
       globalMetrics.recordRoundResolveDuration(resultDuration);
+      globalMetrics.recordMatchCompleted(this.match);
 
       this.match = transitionState(this.match, 'FINAL_REVEAL', now);
       const duration = this.getTransitionDuration('FINAL_REVEAL');
@@ -562,6 +565,7 @@ export class MatchRoom {
   private handleForfeitOnReconnectTimeout(disconnectedPlayerId: string): void {
     const now = Date.now();
     this.match = forfeitMatch(this.match, disconnectedPlayerId, now);
+    globalMetrics.increment('matchesForfeited');
 
     const winnerId = this.match.result?.winnerId ?? '';
     const result = this.match.result!;

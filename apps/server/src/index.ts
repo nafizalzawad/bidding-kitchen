@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
 import { Server as SocketIOServer } from 'socket.io';
 import type {
   ClientToServerEvents,
@@ -17,6 +18,10 @@ export type BuildServerOptions = RoomManagerOptions;
 export async function buildServer(options: BuildServerOptions = {}) {
   const fastify = Fastify({
     logger: false, // We use custom pino logger
+  });
+
+  await fastify.register(helmet, {
+    contentSecurityPolicy: false,
   });
 
   await fastify.register(cors, {
@@ -45,6 +50,9 @@ export async function buildServer(options: BuildServerOptions = {}) {
         origin: '*',
         methods: ['GET', 'POST'],
       },
+      maxHttpBufferSize: 16384, // 16 KB payload limit
+      pingInterval: 10000,
+      pingTimeout: 5000,
     }
   );
 
