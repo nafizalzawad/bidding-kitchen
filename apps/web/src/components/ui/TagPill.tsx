@@ -2,12 +2,13 @@ import React from 'react';
 import type { FlavorTag } from '@bidding-kitchen/shared';
 import { FLAVOR_TAG_META } from '../../tokens/design-tokens.js';
 
-interface TagPillProps {
+export interface TagPillProps {
   tag: FlavorTag;
   size?: 'sm' | 'md';
+  showLabel?: boolean;
 }
 
-export const TagPill: React.FC<TagPillProps> = ({ tag, size = 'md' }) => {
+export const TagPill: React.FC<TagPillProps> = ({ tag, size = 'md', showLabel = true }) => {
   const meta = FLAVOR_TAG_META[tag];
 
   const renderIcon = () => {
@@ -58,7 +59,7 @@ export const TagPill: React.FC<TagPillProps> = ({ tag, size = 'md' }) => {
             fill="currentColor"
             aria-hidden="true"
           >
-            <path d="M12 1l2.5 6.5L21 8l-5 5 1.5 7.5-6.5-3.5L4.5 20.5 6 13 1 8l6.5-.5L12 1z" />
+            <path d="M12 2l2.5 6.5L21 9l-5 4.5 1.5 7L12 17l-5.5 3.5 1.5-7-5-4.5 6.5-.5L12 2z" />
           </svg>
         );
 
@@ -70,31 +71,37 @@ export const TagPill: React.FC<TagPillProps> = ({ tag, size = 'md' }) => {
             fill="currentColor"
             aria-hidden="true"
           >
-            <path d="M17 8C8 10 5.9 16.2 3.8 21.3l1.9.7 1-2.3A4.5 4.5 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2.2-13 3.2S2 11.5 2 13.5s1.8 3.8 1.8 3.8C7 8 17 8 17 8z" />
+            <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.75a8.2 8.2 0 0 0-4.08 3.55C7.2 9.5 11 8.5 17 8z" />
           </svg>
         );
+
+      default:
+        return null;
     }
   };
 
   const sizeClasses =
     size === 'sm'
-      ? 'text-[11px] px-2 py-0.5 gap-1'
-      : 'text-xs px-2.5 py-1 gap-1.5 font-bold';
+      ? showLabel
+        ? 'px-2 py-0.5 text-[10px] gap-1'
+        : 'p-1 text-[10px]'
+      : showLabel
+      ? 'px-2.5 py-1 text-xs gap-1.5'
+      : 'p-1.5 text-xs';
 
   return (
     <span
       data-testid={`flavor-pill-${tag.toLowerCase()}`}
-      className={`inline-flex items-center rounded-full border shadow-sm transition-transform shrink-0 ${sizeClasses}`}
+      className={`inline-flex items-center rounded-full font-bold select-none border border-[#1E1B18] shadow-[0_1px_0_#1E1B18] ${sizeClasses}`}
       style={{
         backgroundColor: meta.bgHex,
         color: meta.textHex,
         borderColor: meta.borderHex,
-        borderWidth: '1.5px',
       }}
-      title={`${meta.label}: ${meta.description}`}
+      title={meta.description}
     >
-      <span className="shrink-0">{renderIcon()}</span>
-      <span>{meta.label}</span>
+      {renderIcon()}
+      {showLabel && <span className="font-display tracking-wide">{meta.label}</span>}
     </span>
   );
 };
