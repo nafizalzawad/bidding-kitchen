@@ -5,6 +5,7 @@ import type {
 } from '@bidding-kitchen/shared';
 import { validateNickname } from '../filters/profanity.js';
 import { globalMetrics } from '../metrics.js';
+import { MatchmakingQueue } from '../rooms/matchmaking-queue.js';
 import type { RoomManager } from '../rooms/room-manager.js';
 import { RateLimiter } from './rate-limiter.js';
 import {
@@ -12,6 +13,8 @@ import {
   JoinRoomPayloadSchema,
   LockBidPayloadSchema,
   NewTierPayloadSchema,
+  QueueJoinPayloadSchema,
+  QueueLeavePayloadSchema,
   ReadyPayloadSchema,
   ReconnectPayloadSchema,
   RematchPayloadSchema,
@@ -23,7 +26,8 @@ export function registerSocketHandlers(
   io: SocketIOServer<ClientToServerEvents, ServerToClientEvents>,
   roomManager: RoomManager,
   rateLimiter = new RateLimiter(),
-): void {
+  matchmakingQueue = new MatchmakingQueue(),
+): { matchmakingQueue: MatchmakingQueue } {
   io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
     // 1. room:create
     socket.on('room:create', (payload, ack) => {
@@ -324,14 +328,54 @@ export function registerSocketHandlers(
       return ack(result);
     });
 
-    // 11. queue:join (matchmaking stub)
-    socket.on('queue:join', (_payload, ack) => {
-      const ticketId = `t_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      return ack({ ok: true, ticketId });
+    // 11. queue:join
+    socket.on('queue:join', (payload, ack) => {
+      if (!rateLimiter.check(`${socket.id}:room`, 10, 60000)) {
+        return ack({
+          ok: false,
+          error: { code: 'RATE_LIMITED', message: 'Too many matchmaking requests. Please wait.' },
+        });
+      }
+
+      const parsed = QueueJoinPayloadSchema.safeParse(payload);
+      if (!parsed.success) {
+        return ack({
+          ok: false,
+          error: { code: 'INVALID_STATE_ACTION', message: parsed.error.issues[0]?.message || 'Invalid payload' },
+        });
+      }
+
+      const nameCheck = validateNickname(parsed.data.nickname);
+      if (!nameCheck.ok) {
+        return ack(nameCheck);
+      }
+
+      const enqueueResult = matchmakingQueue.enqueue({
+        socketId: socket.id,
+        nickname: nameCheck.nickname,
+        tier: parsed.data.tier,
+      });
+
+      if (enqueueResult.matched) {
+        roomManager.createMatchedRoom(
+          enqueueResult.tier,
+          enqueueResult.ticketA,
+          enqueueResult.ticketB,
+        );
+        globalMetrics.increment('matchesCreated');
+      }
+
+      return ack({ ok: true, ticketId: enqueueResult.ticketId });
     });
 
-    // 12. queue:leave (matchmaking stub)
-    socket.on('queue:leave', (_payload, ack) => {
+    // 12. queue:leave
+    socket.on('queue:leave', (payload, ack) => {
+      const parsed = QueueLeavePayloadSchema.safeParse(payload);
+      if (parsed.success) {
+        matchmakingQueue.leaveQueue(parsed.data.ticketId);
+      } else {
+        matchmakingQueue.leaveQueueBySocket(socket.id);
+      }
       return ack({ ok: true });
     });
 
@@ -357,9 +401,12 @@ export function registerSocketHandlers(
 
     // Disconnect event
     socket.on('disconnect', () => {
+      matchmakingQueue.pruneDisconnected(socket.id);
       roomManager.handleSocketDisconnect(socket.id);
       rateLimiter.clear(`${socket.id}:action`);
       rateLimiter.clear(`${socket.id}:room`);
     });
   });
+
+  return { matchmakingQueue };
 }

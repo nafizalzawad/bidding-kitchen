@@ -57,6 +57,15 @@ export const NewTierPayloadSchema = z.object({
   tier: TierIdSchema,
 });
 
+export const QueueJoinPayloadSchema = z.object({
+  nickname: NicknameSchema,
+  tier: TierIdSchema,
+});
+
+export const QueueLeavePayloadSchema = z.object({
+  ticketId: z.string().min(1),
+});
+
 export const TelemetryPayloadSchema = z.object({
   event: z.enum(['TUTORIAL_COMPLETE', 'FIRST_BID_LOCKED', 'SHARE_CLICKED', 'REMATCH_CLICKED']),
   metadata: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),

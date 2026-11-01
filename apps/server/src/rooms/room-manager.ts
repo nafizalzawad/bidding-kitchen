@@ -2,6 +2,7 @@ import type { Server as SocketIOServer, Socket } from 'socket.io';
 import {
   addPlayerToMatch,
   createMatch,
+  DEFAULT_V15_MATCH_CONFIG,
   type ClientToServerEvents,
   type GameError,
   type PublicMatchView,
@@ -75,6 +76,7 @@ export class RoomManager {
     const initialMatch = createMatch({
       roomCode,
       tier: creatorInfo.tier,
+      config: DEFAULT_V15_MATCH_CONFIG,
       seed: Math.floor(Math.random() * 1000000),
       now,
     });
@@ -101,6 +103,95 @@ export class RoomManager {
       playerId,
       reconnectToken,
       match: publicView,
+    };
+  }
+
+  public createMatchedRoom(
+    tier: TierId,
+    ticketA: { socketId: string; nickname: string },
+    ticketB: { socketId: string; nickname: string },
+    socketA?: Socket,
+    socketB?: Socket,
+  ): {
+    roomCode: string;
+    playerA: { id: string; reconnectToken: string; match: PublicMatchView };
+    playerB: { id: string; reconnectToken: string; match: PublicMatchView };
+  } {
+    const roomCode = this.generateRoomCode();
+    const now = Date.now();
+    let match = createMatch({
+      roomCode,
+      tier,
+      config: DEFAULT_V15_MATCH_CONFIG,
+      seed: Math.floor(Math.random() * 1000000),
+      now,
+    });
+
+    const playerAId = `p_${now}_${Math.floor(Math.random() * 10000)}`;
+    const tokenA = `tok_${playerAId}_${Math.floor(Math.random() * 1000000)}`;
+    const playerBId = `p_${now + 1}_${Math.floor(Math.random() * 10000)}`;
+    const tokenB = `tok_${playerBId}_${Math.floor(Math.random() * 1000000)}`;
+
+    match = addPlayerToMatch(match, {
+      id: playerAId,
+      nickname: ticketA.nickname,
+      reconnectToken: tokenA,
+    });
+
+    match = addPlayerToMatch(match, {
+      id: playerBId,
+      nickname: ticketB.nickname,
+      reconnectToken: tokenB,
+    });
+
+    // Both players ready immediately in matched queue
+    match.players[0]!.ready = true;
+    match.players[1]!.ready = true;
+
+    const room = new MatchRoom(roomCode, match, this.io, this.options);
+
+    const actualSocketA = socketA ?? this.io.sockets.sockets.get(ticketA.socketId);
+    const actualSocketB = socketB ?? this.io.sockets.sockets.get(ticketB.socketId);
+
+    if (actualSocketA) {
+      room.bindSocket(playerAId, actualSocketA);
+      this.socketRoomMap.set(actualSocketA.id, roomCode);
+    }
+    if (actualSocketB) {
+      room.bindSocket(playerBId, actualSocketB);
+      this.socketRoomMap.set(actualSocketB.id, roomCode);
+    }
+
+    this.rooms.set(roomCode, room);
+
+    // Advance room state to TIER_CONFIRMED
+    room.handlePlayerReady(playerAId, true);
+
+    const viewA = sanitizeMatchForPlayer(room.match, playerAId, now);
+    const viewB = sanitizeMatchForPlayer(room.match, playerBId, now);
+
+    if (actualSocketA) {
+      actualSocketA.emit('queue:matched', {
+        roomCode,
+        playerId: playerAId,
+        reconnectToken: tokenA,
+        match: viewA,
+      });
+    }
+
+    if (actualSocketB) {
+      actualSocketB.emit('queue:matched', {
+        roomCode,
+        playerId: playerBId,
+        reconnectToken: tokenB,
+        match: viewB,
+      });
+    }
+
+    return {
+      roomCode,
+      playerA: { id: playerAId, reconnectToken: tokenA, match: viewA },
+      playerB: { id: playerBId, reconnectToken: tokenB, match: viewB },
     };
   }
 
