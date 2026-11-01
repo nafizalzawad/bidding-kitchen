@@ -8,9 +8,10 @@ import {
 } from '@bidding-kitchen/shared';
 import { TagPill } from './components/ui/TagPill.js';
 import { FLAVOR_TAG_META } from './tokens/design-tokens.js';
-import { RefreshCw, Coins, Sparkles, Layers, ShieldCheck, Flame, Cpu, FileCheck, Zap } from 'lucide-react';
+import { RefreshCw, Coins, Sparkles, Layers, ShieldCheck, Flame, Cpu, FileCheck, Zap, Layout } from 'lucide-react';
 import { EngineSandboxPanel } from './components/game/EngineSandboxPanel.js';
 import { DualClientInspector } from './components/game/DualClientInspector.js';
+import { StorybookHarnessScreen } from './screens/StorybookHarnessScreen.js';
 
 interface HealthData {
   status: string;
@@ -22,11 +23,30 @@ interface HealthData {
 }
 
 export interface AppProps {
-  defaultTab?: 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS';
+  defaultTab?: 'HARNESS' | 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS';
 }
 
 export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
-  const [activeTab, setActiveTab] = useState<'INSPECTOR' | 'SANDBOX' | 'CONTRACTS'>(defaultTab);
+  // Check URL parameters for harness or hideBar
+  const isDirectHarnessMode = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get('harness') === 'true' || params.has('state');
+  };
+
+  const isHideBar = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get('hideBar') === 'true';
+  };
+
+  // If URL explicitly requests a pure screen capture without outer tabs
+  if (isDirectHarnessMode() && isHideBar()) {
+    return <StorybookHarnessScreen hideBarDefault={true} />;
+  }
+
+  const initialTab = isDirectHarnessMode() ? 'HARNESS' : defaultTab;
+  const [activeTab, setActiveTab] = useState<'HARNESS' | 'INSPECTOR' | 'SANDBOX' | 'CONTRACTS'>(initialTab);
   const [healthStatus, setHealthStatus] = useState<'online' | 'offline (standalone preview)'>('offline (standalone preview)');
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,6 +85,11 @@ export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
     selectedSlot === 'ALL'
       ? STREET_INGREDIENTS
       : STREET_INGREDIENTS.filter((i) => i.slot === selectedSlot);
+
+  // If in full harness view, show the harness screen directly with full controls
+  if (activeTab === 'HARNESS') {
+    return <StorybookHarnessScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFDF7] text-[#1E1B18] px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto selection:bg-[#FFB703] selection:text-[#1E1B18]">
@@ -130,6 +155,15 @@ export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
 
       {/* Primary Navigation Tabs */}
       <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+        <button
+          data-testid="tab-harness"
+          onClick={() => setActiveTab('HARNESS')}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#1E1B18] text-sm font-bold transition shadow-[0_3px_0_#1E1B18] cursor-pointer shrink-0 bg-[#FFB703] text-[#1E1B18] hover:bg-[#f0a900]"
+        >
+          <Layout className="w-4 h-4 text-[#1E1B18]" />
+          <span>Phase 4: Static Screens Harness</span>
+        </button>
+
         <button
           data-testid="tab-live-inspector"
           onClick={() => setActiveTab('INSPECTOR')}
@@ -200,101 +234,129 @@ export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
                     key={tag}
                     className="p-3.5 rounded-xl bg-[#F4EFE2] border-2 border-[#1E1B18] shadow-[0_2px_0_#1E1B18] flex flex-col justify-between"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <TagPill tag={tag} size="md" />
-                      <span className="text-[10px] font-mono font-bold text-[#57514A]">
-                        SVG {meta.iconName}
-                      </span>
+                    <div>
+                      <div className="mb-2">
+                        <TagPill tag={tag} size="md" />
+                      </div>
+                      <p className="text-xs font-semibold text-[#1E1B18]">{meta.description}</p>
                     </div>
-                    <p className="text-xs text-[#1E1B18] mt-1 font-medium leading-relaxed">
-                      {meta.description}
-                    </p>
+                    <div className="mt-3 pt-2 border-t border-[#1E1B18]/15 font-mono text-[10px] text-[#57514A]">
+                      {meta.bgHex}
+                    </div>
                   </div>
                 );
               })}
             </div>
           </section>
 
-          {/* Section 2: Tier Summary Cards */}
+          {/* Section 2: MVP Tiers & Slot Progression */}
           <section
             aria-labelledby="tier-list-heading"
             data-testid="tier-list-section"
             className="bg-[#FFFFFF] p-5 sm:p-6 rounded-2xl border-2 border-[#1E1B18] shadow-[0_4px_0_#1E1B18]"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <Layers className="w-6 h-6 text-[#2563EB]" />
+            <div className="flex items-center gap-2 mb-2">
+              <Flame className="w-6 h-6 text-[#E63946]" />
               <h2 id="tier-list-heading" className="text-xl font-bold font-display text-[#1E1B18]">
-                Match Tiers &amp; Starting Budgets
+                Culinary Tiers &amp; Slot Progression
               </h2>
             </div>
+            <p className="text-xs text-[#57514A] mb-4">
+              The MVP focuses exclusively on the Street Tier ($20 Burger). Higher tiers unlock in v1.5.
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.values(TIERS).map((tier) => (
+              {Object.values(TIERS).map((t) => (
                 <div
-                  key={tier.id}
-                  className={`p-4 rounded-xl border-2 border-[#1E1B18] shadow-[0_3px_0_#1E1B18] ${
-                    tier.mvpEnabled ? 'bg-[#FFFDF7]' : 'bg-[#F4EFE2] opacity-80'
+                  key={t.id}
+                  className={`p-4 rounded-xl border-2 border-[#1E1B18] flex flex-col justify-between shadow-[0_3px_0_#1E1B18] ${
+                    t.mvpEnabled ? 'bg-[#FFFDF7] ring-2 ring-[#FFB703]' : 'bg-[#F4EFE2] opacity-75'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[#1E1B18] text-[#FFFDF7]">
-                      {tier.name}
-                    </span>
-                    {tier.mvpEnabled ? (
-                      <span className="text-xs font-bold text-[#1D7A4C] bg-[#1D7A4C]/10 border border-[#1D7A4C]/30 px-2 py-0.5 rounded-full">
-                        MVP Active
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-[#1E1B18] text-[#FFFDF7]">
+                        {t.id}
                       </span>
-                    ) : (
-                      <span className="text-xs font-bold text-[#57514A]">v1.5 Roadmap</span>
-                    )}
+                      {t.mvpEnabled ? (
+                        <span className="text-xs font-bold text-[#1D7A4C] bg-[#1D7A4C]/10 px-2 py-0.5 rounded-full border border-[#1D7A4C]/30">
+                          Active MVP
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-[#57514A] bg-[#57514A]/10 px-2 py-0.5 rounded-full border border-[#57514A]/30">
+                          v1.5 Tier
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-extrabold text-lg text-[#1E1B18] font-display">
+                      {t.name} ({t.dishName})
+                    </h3>
+                    <div className="flex items-center gap-3 my-2 text-xs font-bold text-[#57514A]">
+                      <span className="flex items-center gap-1 text-[#1E1B18]">
+                        <Coins className="w-3.5 h-3.5 text-[#FFB703]" />
+                        ${t.startingBudget} Budget
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 text-[#1E1B18]">
+                        <Layers className="w-3.5 h-3.5 text-[#2563EB]" />
+                        {t.roundsCount} Rounds
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold font-display text-[#1E1B18]">
-                    ${tier.startingBudget} {tier.dishName}
-                  </h3>
-                  <p className="text-xs text-[#57514A] mt-1">
-                    {tier.roundsCount} Auction Rounds: {tier.slots.join(' → ')}
-                  </p>
+
+                  <div className="mt-4 pt-3 border-t border-[#1E1B18]/15">
+                    <span className="text-[10px] uppercase font-bold text-[#57514A] block mb-1">
+                      Slot Sequence:
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {t.slots.map((slot, idx) => (
+                        <span
+                          key={slot}
+                          className="text-[10px] font-mono font-bold bg-[#FFFFFF] px-1.5 py-0.5 rounded border border-[#1E1B18]/30"
+                        >
+                          {idx + 1}. {slot}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Section 3: Street Tier (19 Ingredients) */}
+          {/* Section 3: Canonical Street Tier Ingredients */}
           <section
-            aria-labelledby="street-ingredients-heading"
+            aria-labelledby="ingredients-heading"
             data-testid="street-ingredients-section"
             className="bg-[#FFFFFF] p-5 sm:p-6 rounded-2xl border-2 border-[#1E1B18] shadow-[0_4px_0_#1E1B18]"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <Flame className="w-6 h-6 text-[#E63946]" />
-                  <h2 id="street-ingredients-heading" className="text-xl font-bold font-display text-[#1E1B18]">
-                    Canonical Street Tier ($20 Burger) Dataset
-                  </h2>
-                </div>
-                <p className="text-xs text-[#57514A] mt-0.5">
-                  5 Slots • 19 Canonical Variants • Sum of Max Base Prices = $21 (Strict Scarcity &gt; $20 Budget)
+                <h2 id="ingredients-heading" className="text-xl font-bold font-display text-[#1E1B18]">
+                  Canonical Street Ingredients ($20 Burger Tier)
+                </h2>
+                <p className="text-xs text-[#57514A]">
+                  19 total ingredients (4 Free Basics, 15 Premium Variants). Filter by slot below:
                 </p>
               </div>
 
-              {/* Filter Buttons */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+              {/* Slot Filter Pill Bar */}
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   onClick={() => setSelectedSlot('ALL')}
-                  className={`min-h-[44px] min-w-[44px] px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-[#1E1B18] transition cursor-pointer ${
+                  className={`min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl text-xs font-bold border-2 border-[#1E1B18] transition cursor-pointer flex items-center justify-center ${
                     selectedSlot === 'ALL'
                       ? 'bg-[#1E1B18] text-[#FFFDF7]'
                       : 'bg-[#F4EFE2] text-[#1E1B18] hover:bg-[#FFFDF7]'
                   }`}
                 >
-                  All (19)
+                  ALL (19)
                 </button>
                 {streetSlots.map((slot) => (
                   <button
                     key={slot}
                     onClick={() => setSelectedSlot(slot)}
-                    className={`min-h-[44px] min-w-[44px] px-3 py-1.5 rounded-lg text-xs font-bold border-2 border-[#1E1B18] transition cursor-pointer ${
+                    className={`min-h-[44px] min-w-[44px] px-2.5 py-2 rounded-xl text-xs font-bold border-2 border-[#1E1B18] transition cursor-pointer flex items-center justify-center ${
                       selectedSlot === slot
                         ? 'bg-[#1E1B18] text-[#FFFDF7]'
                         : 'bg-[#F4EFE2] text-[#1E1B18] hover:bg-[#FFFDF7]'
@@ -388,7 +450,7 @@ export const App: React.FC<AppProps> = ({ defaultTab = 'INSPECTOR' }) => {
       )}
 
       <footer className="mt-12 pt-6 border-t-2 border-[#1E1B18] text-xs font-medium text-[#57514A] flex flex-col sm:flex-row items-center justify-between gap-2">
-        <span>Bidding Kitchen © 2026 • Phase 2 Engine Sandbox &amp; Design Tokens</span>
+        <span>Bidding Kitchen © 2026 • Phase 4 Design System &amp; Static Screens</span>
         <span className="font-mono text-[11px]">Strict TypeScript • Zero Dependencies • Fastify 5</span>
       </footer>
     </div>
