@@ -27,9 +27,24 @@ export interface SimulationReport {
   totalCollisions: number;
   collisionRate: number;
   round1WinnerMatchWinRate: number;
+  round1TiedMatches: number;
+  round1DecidedMatches: number;
   ingredientPickRates: Record<string, number>;
   ingredientWinRates: Record<string, number>;
   comboFrequencies: Record<ComboId, number>;
+  leftoverMoneyStats: {
+    mean: number;
+    median: number;
+    min: number;
+    max: number;
+  };
+  scorePercentiles: {
+    p10: number;
+    p25: number;
+    p50: number;
+    p75: number;
+    p90: number;
+  };
   elapsedMs: number;
 }
 
@@ -120,6 +135,7 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
   let totalCollisions = 0;
   let round1WinnerWonMatch = 0;
   let round1DecidedMatches = 0;
+  let round1TiedMatches = 0;
 
   const ingredientPicks: Record<string, number> = {};
   const ingredientWins: Record<string, number> = {};
@@ -129,6 +145,9 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     CRUNCH_CONTRAST: 0,
     CHEFS_PRIDE: 0,
   };
+
+  const allScores: number[] = [];
+  const allLeftovers: number[] = [];
 
   for (let i = 0; i < options.matchCount; i++) {
     const seed = (baseSeed + i * 31) >>> 0;
@@ -141,6 +160,9 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     totalScoreB += scoreB.finalScore;
     totalSpentA += scoreA.totalSpent;
     totalSpentB += scoreB.totalSpent;
+
+    allScores.push(scoreA.finalScore, scoreB.finalScore);
+    allLeftovers.push(20 - scoreA.totalSpent, 20 - scoreB.totalSpent);
 
     if (result.winnerId === botA.id) {
       botAWins++;
@@ -157,20 +179,25 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
       }
     }
 
-    // Round 1 winner correlation
+    // Round 1 winner correlation:
+    // When both players pick plain bun ($0) or have identical taste scores,
+    // classify as "Tied Round 1" so firstRoundWinnerWinRate measures matches with a distinct Round-1 leader.
     const r1 = result.roundHistory[0];
     if (r1) {
       const p0Award = r1.awardsByPlayer[botA.id];
       const p1Award = r1.awardsByPlayer[botB.id];
       if (p0Award && p1Award) {
-        let r1WinnerId: string | null = null;
-        if (p0Award.ingredient.tasteScore > p1Award.ingredient.tasteScore) {
-          r1WinnerId = botA.id;
-        } else if (p1Award.ingredient.tasteScore > p0Award.ingredient.tasteScore) {
-          r1WinnerId = botB.id;
-        }
+        if (
+          (p0Award.ingredient.id === 'street_bun_plain' && p1Award.ingredient.id === 'street_bun_plain') ||
+          p0Award.ingredient.tasteScore === p1Award.ingredient.tasteScore
+        ) {
+          round1TiedMatches++;
+        } else {
+          const r1WinnerId =
+            p0Award.ingredient.tasteScore > p1Award.ingredient.tasteScore
+              ? botA.id
+              : botB.id;
 
-        if (r1WinnerId) {
           round1DecidedMatches++;
           if (r1WinnerId === result.winnerId) {
             round1WinnerWonMatch++;
@@ -212,6 +239,26 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     ingredientWinRates[id] = count > 0 ? (ingredientWins[id] ?? 0) / count : 0;
   }
 
+  // Calculate score percentiles
+  allScores.sort((a, b) => a - b);
+  const scorePercentiles = {
+    p10: allScores[Math.floor(allScores.length * 0.1)] ?? 0,
+    p25: allScores[Math.floor(allScores.length * 0.25)] ?? 0,
+    p50: allScores[Math.floor(allScores.length * 0.5)] ?? 0,
+    p75: allScores[Math.floor(allScores.length * 0.75)] ?? 0,
+    p90: allScores[Math.floor(allScores.length * 0.9)] ?? 0,
+  };
+
+  // Calculate leftover money distribution
+  allLeftovers.sort((a, b) => a - b);
+  const totalLeftover = allLeftovers.reduce((sum, v) => sum + v, 0);
+  const leftoverMoneyStats = {
+    mean: allLeftovers.length > 0 ? totalLeftover / allLeftovers.length : 0,
+    median: allLeftovers[Math.floor(allLeftovers.length * 0.5)] ?? 0,
+    min: allLeftovers[0] ?? 0,
+    max: allLeftovers[allLeftovers.length - 1] ?? 0,
+  };
+
   const elapsedMs = Date.now() - startTime;
   const totalRounds = options.matchCount * 5;
 
@@ -232,9 +279,13 @@ export function runSimulation(options: RunSimulationOptions): SimulationReport {
     collisionRate: totalCollisions / totalRounds,
     round1WinnerMatchWinRate:
       round1DecidedMatches > 0 ? round1WinnerWonMatch / round1DecidedMatches : 0.5,
+    round1TiedMatches,
+    round1DecidedMatches,
     ingredientPickRates,
     ingredientWinRates,
     comboFrequencies,
+    leftoverMoneyStats,
+    scorePercentiles,
     elapsedMs,
   };
 }

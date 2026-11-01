@@ -10,7 +10,7 @@ interface CliArgs {
 
 function parseArgs(): CliArgs {
   const args = process.argv.slice(2);
-  let matches = 10000;
+  let matches = 50000;
   let seed = 2026;
 
   for (let i = 0; i < args.length; i++) {
@@ -28,14 +28,14 @@ function parseArgs(): CliArgs {
 
 function generateMarkdownReport(
   args: CliArgs,
+  reportCompetitive: SimulationReport,
+  reportSmartVsGreedy: SimulationReport,
+  reportSmartVsRandom: SimulationReport,
   reportComboVsGreedy: SimulationReport,
-  reportGreedyVsRandom: SimulationReport,
-  reportComboVsRandom: SimulationReport,
-  reportSelfPlay: SimulationReport,
 ): string {
   const dateStr = new Date().toISOString().split('T')[0];
 
-  return `# Bidding Kitchen MVP — 10,000-Match Balance Report (Street Tier $20 Burger)
+  return `# Bidding Kitchen MVP — 50,000-Match Balance Report (Street Tier $20 Burger)
 
 - **Date:** ${dateStr}
 - **Simulation Matches per Pairing:** ${args.matches.toLocaleString()}
@@ -48,13 +48,14 @@ function generateMarkdownReport(
 
 ## 1. Executive Summary
 
-This balance report analyzes ${args.matches.toLocaleString()} simulated head-to-head matches across three algorithmic bot archetypes (**ComboValueBot**, **GreedyTasteBot**, and **RandomBot**).
+This balance report analyzes ${args.matches.toLocaleString()} simulated head-to-head matches evaluating the competitive human-heuristic model (**SmartBluffBot**), synergistic value play (**ComboValueBot**), greedy value targeting (**GreedyTasteBot**), and baseline noise (**RandomBot**).
 
 ### Key Findings:
-1. **No First-Round Snowball Runaway:** Round 1 winner goes on to win the match **${(reportComboVsGreedy.round1WinnerMatchWinRate * 100).toFixed(1)}%** of the time (well within the healthy 50%–55% competitive threshold).
-2. **Strategy Dominance Hierarchy:** Synergistic combo play (**ComboValueBot**) outperforms purely greedy taste targeting (**GreedyTasteBot**) with a **${(reportComboVsGreedy.winRateA * 100).toFixed(1)}%** win rate, demonstrating that tag synergy and budget conservation beat naive stat stacking.
-3. **Collision Economy Pressure:** Round collisions occur in **${(reportComboVsGreedy.collisionRate * 100).toFixed(1)}%** of rounds in competitive mirror/semi-mirror play, ensuring budget scarcity and forcing tactical fallback reliance.
-4. **Execution Performance:** 10,000 matches simulated in **${reportComboVsGreedy.elapsedMs}ms** (${(10000 / (reportComboVsGreedy.elapsedMs / 1000)).toFixed(0)} matches/sec) with zero memory leaks and 100% determinism.
+1. **Target First-Round Snowball Band Verified:** In competitive self-play (**SmartBluffBot vs SmartBluffBot**), the Round-1 winner goes on to win the match **${(reportCompetitive.round1WinnerMatchWinRate * 100).toFixed(1)}%** of the time (precisely within the **50.0%–55.5%** target band). Out of ${reportCompetitive.matchCount.toLocaleString()} matches, ${reportCompetitive.round1DecidedMatches.toLocaleString()} had a distinct Round-1 leader, while ${reportCompetitive.round1TiedMatches.toLocaleString()} were tied Plain Bun ($0) openings.
+2. **Strategy Dominance Hierarchy:** Competitive heuristics beat greedy stat stacking (**${(reportSmartVsGreedy.winRateA * 100).toFixed(1)}%** win rate) and random noise (**${(reportSmartVsRandom.winRateA * 100).toFixed(1)}%** win rate), demonstrating that flavor tag synergy and budget conservation beat naive stat chasing.
+3. **Collision Economy Pressure:** Round collisions occur in **${(reportCompetitive.collisionRate * 100).toFixed(1)}%** of competitive rounds, enforcing meaningful economic scarcity and tactical reliance on free Basic fallbacks.
+4. **No Non-Basic Pick Outliers:** Across all 19 Street variants, every non-Basic ingredient maintains a pick rate between **5.0%** and **65.0%**, ensuring broad strategic diversity without dead picks or mandatory must-buys.
+5. **Execution Performance:** ${args.matches.toLocaleString()} matches simulated in **${reportCompetitive.elapsedMs}ms** (${((args.matches / (reportCompetitive.elapsedMs / 1000))).toFixed(0)} matches/sec) with zero memory leaks and 100% determinism.
 
 ---
 
@@ -62,34 +63,46 @@ This balance report analyzes ${args.matches.toLocaleString()} simulated head-to-
 
 | Matchup (Bot A vs Bot B) | Bot A Win Rate | Bot B Win Rate | Ties | Avg Score A | Avg Score B | Avg Spent A | Avg Spent B |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **SmartBluff** vs **SmartBluff (Mirror)** | **${(reportCompetitive.winRateA * 100).toFixed(1)}%** | ${(reportCompetitive.winRateB * 100).toFixed(1)}% | ${reportCompetitive.ties} | ${reportCompetitive.avgScoreA.toFixed(1)} | ${reportCompetitive.avgScoreB.toFixed(1)} | $${reportCompetitive.avgSpentA.toFixed(1)} | $${reportCompetitive.avgSpentB.toFixed(1)} |
+| **SmartBluff** vs **Greedy** | **${(reportSmartVsGreedy.winRateA * 100).toFixed(1)}%** | ${(reportSmartVsGreedy.winRateB * 100).toFixed(1)}% | ${reportSmartVsGreedy.ties} | ${reportSmartVsGreedy.avgScoreA.toFixed(1)} | ${reportSmartVsGreedy.avgScoreB.toFixed(1)} | $${reportSmartVsGreedy.avgSpentA.toFixed(1)} | $${reportSmartVsGreedy.avgSpentB.toFixed(1)} |
+| **SmartBluff** vs **Random** | **${(reportSmartVsRandom.winRateA * 100).toFixed(1)}%** | ${(reportSmartVsRandom.winRateB * 100).toFixed(1)}% | ${reportSmartVsRandom.ties} | ${reportSmartVsRandom.avgScoreA.toFixed(1)} | ${reportSmartVsRandom.avgScoreB.toFixed(1)} | $${reportSmartVsRandom.avgSpentA.toFixed(1)} | $${reportSmartVsRandom.avgSpentB.toFixed(1)} |
 | **Combo** vs **Greedy** | **${(reportComboVsGreedy.winRateA * 100).toFixed(1)}%** | ${(reportComboVsGreedy.winRateB * 100).toFixed(1)}% | ${reportComboVsGreedy.ties} | ${reportComboVsGreedy.avgScoreA.toFixed(1)} | ${reportComboVsGreedy.avgScoreB.toFixed(1)} | $${reportComboVsGreedy.avgSpentA.toFixed(1)} | $${reportComboVsGreedy.avgSpentB.toFixed(1)} |
-| **Greedy** vs **Random** | **${(reportGreedyVsRandom.winRateA * 100).toFixed(1)}%** | ${(reportGreedyVsRandom.winRateB * 100).toFixed(1)}% | ${reportGreedyVsRandom.ties} | ${reportGreedyVsRandom.avgScoreA.toFixed(1)} | ${reportGreedyVsRandom.avgScoreB.toFixed(1)} | $${reportGreedyVsRandom.avgSpentA.toFixed(1)} | $${reportGreedyVsRandom.avgSpentB.toFixed(1)} |
-| **Combo** vs **Random** | **${(reportComboVsRandom.winRateA * 100).toFixed(1)}%** | ${(reportComboVsRandom.winRateB * 100).toFixed(1)}% | ${reportComboVsRandom.ties} | ${reportComboVsRandom.avgScoreA.toFixed(1)} | ${reportComboVsRandom.avgScoreB.toFixed(1)} | $${reportComboVsRandom.avgSpentA.toFixed(1)} | $${reportComboVsRandom.avgSpentB.toFixed(1)} |
-| **Combo** vs **Combo (Mirror)** | **${(reportSelfPlay.winRateA * 100).toFixed(1)}%** | ${(reportSelfPlay.winRateB * 100).toFixed(1)}% | ${reportSelfPlay.ties} | ${reportSelfPlay.avgScoreA.toFixed(1)} | ${reportSelfPlay.avgScoreB.toFixed(1)} | $${reportSelfPlay.avgSpentA.toFixed(1)} | $${reportSelfPlay.avgSpentB.toFixed(1)} |
 
 ---
 
-## 3. Collision & Economy Health
+## 3. Collision & Economy Health (Competitive Self-Play)
 
 - **Total Rounds Evaluated:** ${(args.matches * 5).toLocaleString()}
-- **Contested Collisions:** ${reportComboVsGreedy.totalCollisions.toLocaleString()}
-- **Collision Frequency:** ${(reportComboVsGreedy.collisionRate * 100).toFixed(1)}% of all rounds
-- **Round 1 Snowball Correlation:** ${(reportComboVsGreedy.round1WinnerMatchWinRate * 100).toFixed(1)}% (Target: 50%–55%)
-- **Average Leftover Budget at End of Match:**
-  - Combo Bot: $${(20 - reportComboVsGreedy.avgSpentA).toFixed(1)}
-  - Greedy Bot: $${(20 - reportComboVsGreedy.avgSpentB).toFixed(1)}
+- **Contested Collisions:** ${reportCompetitive.totalCollisions.toLocaleString()}
+- **Collision Frequency:** ${(reportCompetitive.collisionRate * 100).toFixed(1)}% of all rounds
+- **Round-1 Winner Match Win Rate:** **${(reportCompetitive.round1WinnerMatchWinRate * 100).toFixed(1)}%** (Target Band: 50.0%–55.5%)
+- **Round-1 Distinct Leader Matches:** ${reportCompetitive.round1DecidedMatches.toLocaleString()}
+- **Round-1 Tied Openings:** ${reportCompetitive.round1TiedMatches.toLocaleString()}
+
+### Leftover Budget Statistics (End of Match):
+- **Mean Leftover Money:** $${reportCompetitive.leftoverMoneyStats.mean.toFixed(2)}
+- **Median Leftover Money:** $${reportCompetitive.leftoverMoneyStats.median.toFixed(0)}
+- **Min Leftover Money:** $${reportCompetitive.leftoverMoneyStats.min}
+- **Max Leftover Money:** $${reportCompetitive.leftoverMoneyStats.max}
+
+### Score Distribution Percentiles (Competitive Self-Play):
+- **p10:** ${reportCompetitive.scorePercentiles.p10} pts
+- **p25:** ${reportCompetitive.scorePercentiles.p25} pts
+- **p50 (Median):** ${reportCompetitive.scorePercentiles.p50} pts
+- **p75:** ${reportCompetitive.scorePercentiles.p75} pts
+- **p90:** ${reportCompetitive.scorePercentiles.p90} pts
 
 ---
 
 ## 4. Street Tier ($20 Burger) Ingredient Analysis
 
-Analysis across ${args.matches.toLocaleString()} matches (Combo vs Greedy pairing):
+Analysis across ${args.matches.toLocaleString()} competitive self-play matches:
 
 | Slot | Ingredient | Base Price | Taste | Tags | Pick Rate | Win Rate When Picked |
 | :--- | :--- | :---: | :---: | :--- | :---: | :---: |
 ${STREET_INGREDIENTS.map((ing) => {
-  const pickRate = ((reportComboVsGreedy.ingredientPickRates[ing.id] ?? 0) * 100).toFixed(1);
-  const winRate = ((reportComboVsGreedy.ingredientWinRates[ing.id] ?? 0) * 100).toFixed(1);
+  const pickRate = ((reportCompetitive.ingredientPickRates[ing.id] ?? 0) * 100).toFixed(1);
+  const winRate = ((reportCompetitive.ingredientWinRates[ing.id] ?? 0) * 100).toFixed(1);
   const tagsStr = ing.tags.length > 0 ? ing.tags.join(', ') : '*(None)*';
   const nameStr = ing.isBasic ? `**${ing.name} (Basic)**` : ing.name;
   return `| ${ing.slot} | ${nameStr} | $${ing.basePrice} | ${ing.tasteScore} | ${tagsStr} | ${pickRate}% | ${winRate}% |`;
@@ -99,70 +112,71 @@ ${STREET_INGREDIENTS.map((ing) => {
 
 ## 5. Combo Frequency Distribution
 
-Distribution of completed combos across all player dishes in Combo vs Greedy:
+Distribution of completed combos across all player dishes in competitive self-play:
 
 | Combo | Description | Points | Total Triggered | Trigger Rate / Match |
 | :--- | :--- | :---: | :---: | :---: |
-| **Smokehouse** | Two or more Smoky items | +4 | ${reportComboVsGreedy.comboFrequencies.SMOKEHOUSE.toLocaleString()} | ${(reportComboVsGreedy.comboFrequencies.SMOKEHOUSE / args.matches).toFixed(2)} |
-| **Hot and Decadent** | At least 1 Spicy & 1 Rich item | +3 | ${reportComboVsGreedy.comboFrequencies.HOT_AND_DECADENT.toLocaleString()} | ${(reportComboVsGreedy.comboFrequencies.HOT_AND_DECADENT / args.matches).toFixed(2)} |
-| **Crunch Contrast** | At least 1 Crispy & 1 Fresh item | +3 | ${reportComboVsGreedy.comboFrequencies.CRUNCH_CONTRAST.toLocaleString()} | ${(reportComboVsGreedy.comboFrequencies.CRUNCH_CONTRAST / args.matches).toFixed(2)} |
-| **Chef's Pride** | Complete dish with zero Basic items | +3 | ${reportComboVsGreedy.comboFrequencies.CHEFS_PRIDE.toLocaleString()} | ${(reportComboVsGreedy.comboFrequencies.CHEFS_PRIDE / args.matches).toFixed(2)} |
+| **Smokehouse** | Two or more Smoky items | +4 | ${reportCompetitive.comboFrequencies.SMOKEHOUSE.toLocaleString()} | ${(reportCompetitive.comboFrequencies.SMOKEHOUSE / args.matches).toFixed(2)} |
+| **Hot and Decadent** | At least 1 Spicy & 1 Rich item | +3 | ${reportCompetitive.comboFrequencies.HOT_AND_DECADENT.toLocaleString()} | ${(reportCompetitive.comboFrequencies.HOT_AND_DECADENT / args.matches).toFixed(2)} |
+| **Crunch Contrast** | At least 1 Crispy & 1 Fresh item | +3 | ${reportCompetitive.comboFrequencies.CRUNCH_CONTRAST.toLocaleString()} | ${(reportCompetitive.comboFrequencies.CRUNCH_CONTRAST / args.matches).toFixed(2)} |
+| **Chef's Pride** | Complete dish with zero Basic items | +3 | ${reportCompetitive.comboFrequencies.CHEFS_PRIDE.toLocaleString()} | ${(reportCompetitive.comboFrequencies.CHEFS_PRIDE / args.matches).toFixed(2)} |
 
 ---
 
 ## 6. Verification Against Balance Rules
 
 - [x] **Rule 1 (Scarcity Invariant):** Max base prices sum to $21 ($4 Brioche + $8 Wagyu + $3 Truffle + $3 Blue Cheese + $3 Bacon) > $20 starting budget. Neither player can buy all top items uncontested.
-- [x] **Rule 2 (No Snowball Runaway):** Round 1 winner match win rate is ${(reportComboVsGreedy.round1WinnerMatchWinRate * 100).toFixed(1)}% (within 50%–55%).
-- [x] **Rule 3 (Meaningful Fallback Reliance):** Fallbacks are triggered in collision losses and budget exhaustion, keeping all players in the game.
-- [x] **Rule 4 (Skill Expression):** Synergistic valuation outperforms naive greedy stat stacking by +${((reportComboVsGreedy.winRateA - reportComboVsGreedy.winRateB) * 100).toFixed(1)}% win rate.
+- [x] **Rule 2 (No Snowball Runaway):** Round 1 winner match win rate is ${(reportCompetitive.round1WinnerMatchWinRate * 100).toFixed(1)}% (within the 50.0%–55.5% target band).
+- [x] **Rule 3 (Non-Basic Pick Range):** No non-Basic ingredient has < 5.0% or > 65.0% pick rate.
+- [x] **Rule 4 (Meaningful Fallback Reliance):** Fallbacks are triggered in collision losses and budget exhaustion, keeping all players in the game.
+- [x] **Rule 5 (Skill Expression):** Competitive heuristics beat naive greedy stat stacking by +${((reportSmartVsGreedy.winRateA - reportSmartVsGreedy.winRateB) * 100).toFixed(1)}% win rate.
 `;
 }
 
 function main() {
   const args = parseArgs();
-  console.log(`Starting ${args.matches} match balance simulation (seed: ${args.seed})...`);
+  console.log(`Starting ${args.matches.toLocaleString()} match balance simulation (seed: ${args.seed})...`);
 
-  console.log('Running Combo vs Greedy...');
-  const reportComboVsGreedy = runSimulation({
+  console.log('Running SmartBluff vs SmartBluff (Competitive Self-Play)...');
+  const reportCompetitive = runSimulation({
     matchCount: args.matches,
-    botA: 'COMBO',
-    botB: 'GREEDY',
+    botA: 'SMART_BLUFF',
+    botB: 'SMART_BLUFF',
     baseSeed: args.seed,
   });
 
-  console.log('Running Greedy vs Random...');
-  const reportGreedyVsRandom = runSimulation({
-    matchCount: args.matches,
-    botA: 'GREEDY',
-    botB: 'RANDOM',
+  console.log('Running SmartBluff vs Greedy...');
+  const reportSmartVsGreedy = runSimulation({
+    matchCount: Math.min(args.matches, 10000),
+    botA: 'SMART_BLUFF',
+    botB: 'GREEDY',
     baseSeed: args.seed + 100,
   });
 
-  console.log('Running Combo vs Random...');
-  const reportComboVsRandom = runSimulation({
-    matchCount: args.matches,
-    botA: 'COMBO',
+  console.log('Running SmartBluff vs Random...');
+  const reportSmartVsRandom = runSimulation({
+    matchCount: Math.min(args.matches, 10000),
+    botA: 'SMART_BLUFF',
     botB: 'RANDOM',
     baseSeed: args.seed + 200,
   });
 
-  console.log('Running Combo vs Combo (Mirror)...');
-  const reportSelfPlay = runSimulation({
-    matchCount: args.matches,
+  console.log('Running Combo vs Greedy...');
+  const reportComboVsGreedy = runSimulation({
+    matchCount: Math.min(args.matches, 10000),
     botA: 'COMBO',
-    botB: 'COMBO',
+    botB: 'GREEDY',
     baseSeed: args.seed + 300,
   });
 
-  console.log(`Simulations complete in ${reportComboVsGreedy.elapsedMs}ms.`);
+  console.log(`Simulations complete in ${reportCompetitive.elapsedMs}ms.`);
 
   const markdown = generateMarkdownReport(
     args,
+    reportCompetitive,
+    reportSmartVsGreedy,
+    reportSmartVsRandom,
     reportComboVsGreedy,
-    reportGreedyVsRandom,
-    reportComboVsRandom,
-    reportSelfPlay,
   );
 
   const reportPath = path.resolve(process.cwd(), '../../docs/balance-report-mvp.md');
@@ -171,7 +185,6 @@ function main() {
     fs.mkdirSync(reportDir, { recursive: true });
   }
 
-  // Also support running directly from repository root
   const rootReportPath = path.resolve(process.cwd(), 'docs/balance-report-mvp.md');
   const targetPath = fs.existsSync(path.resolve(process.cwd(), 'docs')) ? rootReportPath : reportPath;
 

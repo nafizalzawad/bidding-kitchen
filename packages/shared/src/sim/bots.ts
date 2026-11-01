@@ -1,6 +1,6 @@
 import type { Ingredient, Match, Player } from '../types/models.js';
 
-export type BotArchetype = 'RANDOM' | 'GREEDY' | 'COMBO';
+export type BotArchetype = 'RANDOM' | 'GREEDY' | 'COMBO' | 'SMART_BLUFF';
 
 export interface BotDecision {
   ingredientId: string;
@@ -14,10 +14,6 @@ export interface BotPlayer {
   decideBid(match: Match, playerId: string, prng: () => number): BotDecision;
 }
 
-/**
- * Random Bot:
- * Chooses an affordable ingredient uniformly at random and bids between base price and base price + 3.
- */
 export function decideRandomBot(match: Match, player: Player, prng: () => number): BotDecision {
   const currentRound = match.rounds[match.roundIndex]!;
   const affordable = currentRound.availableIngredients.filter(
@@ -38,10 +34,6 @@ export function decideRandomBot(match: Match, player: Player, prng: () => number
   };
 }
 
-/**
- * Greedy Taste Bot:
- * Prioritizes high taste scores with slight tactical variation in bid margins.
- */
 export function decideGreedyBot(match: Match, player: Player, prng: () => number): BotDecision {
   const currentRound = match.rounds[match.roundIndex]!;
   const affordable = currentRound.availableIngredients.filter(
@@ -53,7 +45,6 @@ export function decideGreedyBot(match: Match, player: Player, prng: () => number
     return { ingredientId: basic.id, amount: basic.basePrice };
   }
 
-  // Sort by tasteScore with small jitter for tie-breaking
   const sorted = [...affordable].sort((a, b) => {
     const scoreA = a.tasteScore + (prng() * 0.2 - 0.1);
     const scoreB = b.tasteScore + (prng() * 0.2 - 0.1);
@@ -71,11 +62,6 @@ export function decideGreedyBot(match: Match, player: Player, prng: () => number
   };
 }
 
-/**
- * Combo Value Bot:
- * Calculates synergistic flavor and customer order value, conserving budget on early rounds
- * and contesting high-synergy pieces.
- */
 export function decideComboBot(match: Match, player: Player, prng: () => number): BotDecision {
   const currentRound = match.rounds[match.roundIndex]!;
   const affordable = currentRound.availableIngredients.filter(
@@ -93,7 +79,6 @@ export function decideComboBot(match: Match, player: Player, prng: () => number)
   function evaluateUtility(item: Ingredient): number {
     let utility = item.tasteScore;
 
-    // Combo potential
     const tags = item.tags;
     if (tags.includes('SMOKY') && existingTags.includes('SMOKY')) {
       utility += 4;
@@ -111,14 +96,12 @@ export function decideComboBot(match: Match, player: Player, prng: () => number)
       utility += 3;
     }
 
-    // Customer order synergy
     if (order && order.requiredTags) {
       if (tags.some((t) => order.requiredTags?.includes(t))) {
         utility += 3.5;
       }
     }
 
-    // Preserve budget on slot 0 (BUN) so we have money for Wagyu ($8) or Truffle ($3)
     if (match.roundIndex === 0 && item.basePrice > 2) {
       utility -= 2.0;
     }
@@ -145,6 +128,121 @@ export function decideComboBot(match: Match, player: Player, prng: () => number)
   };
 }
 
+/**
+ * Smart Bluff Bot:
+ * Models a realistic competitive human player who:
+ * 1. Has strategic build inclinations (Smokehouse, Crunch Contrast, Hot & Decadent, or Balanced).
+ * 2. Evaluates net taste score plus combo potential relative to leftover budget.
+ * 3. Understands Round 1 budget conservation: spending $4 on Brioche weakens Round 2 tiebreaks and purchasing power.
+ * 4. Applies stochastic bluffing variance on contested items.
+ */
+export function decideSmartBluffBot(match: Match, player: Player, prng: () => number): BotDecision {
+  const currentRound = match.rounds[match.roundIndex]!;
+  const affordable = currentRound.availableIngredients.filter(
+    (i) => i.basePrice <= player.budget,
+  );
+
+  if (affordable.length === 0) {
+    const basic = currentRound.availableIngredients.find((i) => i.isBasic)!;
+    return { ingredientId: basic.id, amount: basic.basePrice };
+  }
+
+  const existingTags = player.dish.flatMap((d) => d.ingredient.tags);
+  const order = player.secretOrder;
+  const isRound0 = match.roundIndex === 0;
+
+  // Determine player's build inclination for this match based on seed and player id
+  // 0: Smokehouse (SMOKY), 1: Crunch Contrast (CRISPY + FRESH), 2: Hot & Decadent (RICH + SPICY), 3: Budget Value
+  const seedHash = (match.seed + (player.seat === 0 ? 17 : 89)) % 4;
+
+  function evaluateItemValue(item: Ingredient): number {
+    // Net point value above leftover cash (0.5 pts per $1 saved)
+    let netValue = item.tasteScore - item.basePrice * 0.5;
+
+    const tags = item.tags;
+
+    // Completed combos from existing tags
+    if (tags.includes('SMOKY') && existingTags.includes('SMOKY')) {
+      netValue += 4.0;
+    }
+    if (
+      (tags.includes('SPICY') && existingTags.includes('RICH')) ||
+      (tags.includes('RICH') && existingTags.includes('SPICY'))
+    ) {
+      netValue += 3.0;
+    }
+    if (
+      (tags.includes('CRISPY') && existingTags.includes('FRESH')) ||
+      (tags.includes('FRESH') && existingTags.includes('CRISPY'))
+    ) {
+      netValue += 3.0;
+    }
+
+    // Build inclination synergy (human intention before combos complete)
+    if (seedHash === 0 && tags.includes('SMOKY')) {
+      netValue += 2.2;
+    } else if (seedHash === 1 && (tags.includes('CRISPY') || tags.includes('FRESH'))) {
+      netValue += 2.2;
+    } else if (seedHash === 2 && (tags.includes('RICH') || tags.includes('SPICY'))) {
+      netValue += 2.0;
+    } else if (seedHash === 3 && item.basePrice === 1) {
+      // Budget Value / Chef's Pride builder: loves cheap $1 utility fillers (American cheese, Ketchup, Lettuce)
+      netValue += 2.2;
+    }
+
+    // Customer Order synergy
+    if (order && order.requiredTags) {
+      if (tags.some((t) => order.requiredTags?.includes(t))) {
+        netValue += 2.5;
+      }
+    }
+
+    // Round 1 (BUN) Budget Conservation:
+    // Human players recognize spending $4 on Brioche drops budget to $16,
+    // losing tiebreak priority on Wagyu/Smash and limiting late-game flexibility.
+    if (isRound0) {
+      if (item.basePrice >= 4) {
+        netValue -= 1.6;
+      } else if (item.basePrice === 2) {
+        netValue += 0.4;
+      }
+    }
+
+    return netValue;
+  }
+
+  const scored = affordable.map((item) => ({
+    item,
+    score: evaluateItemValue(item) + (prng() * 0.9 - 0.45),
+  }));
+
+  scored.sort((a, b) => b.score - a.score);
+  const chosen = scored[0]!.item;
+
+  // Stochastic bluffing & margin bidding:
+  // Contested slots: Round 1 (PATTY), Round 2 (SAUCE), Round 4 (TOPPING)
+  const isContestedSlot = match.roundIndex === 1 || match.roundIndex === 2 || match.roundIndex === 4;
+  const maxExtra = Math.max(0, player.budget - chosen.basePrice);
+
+  let extra = 0;
+  if (maxExtra > 0 && !chosen.isBasic) {
+    const roll = prng();
+    if (isContestedSlot) {
+      if (roll < 0.45) extra = 0;
+      else if (roll < 0.85) extra = 1;
+      else extra = Math.min(2, maxExtra);
+    } else {
+      if (roll < 0.65) extra = 0;
+      else extra = Math.min(1, maxExtra);
+    }
+  }
+
+  return {
+    ingredientId: chosen.id,
+    amount: chosen.basePrice + extra,
+  };
+}
+
 export function createBot(id: string, nickname: string, archetype: BotArchetype): BotPlayer {
   return {
     id,
@@ -163,6 +261,8 @@ export function createBot(id: string, nickname: string, archetype: BotArchetype)
           return decideGreedyBot(match, player, prng);
         case 'COMBO':
           return decideComboBot(match, player, prng);
+        case 'SMART_BLUFF':
+          return decideSmartBluffBot(match, player, prng);
       }
     },
   };
