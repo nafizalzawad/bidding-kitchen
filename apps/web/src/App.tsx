@@ -78,7 +78,12 @@ export const App: React.FC<AppProps> = ({ defaultTab }) => {
 
   const fetchHealth = async () => {
     setLoading(true);
-    const serverUrl = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3001';
+    const serverUrl =
+      import.meta.env.VITE_SERVER_URL ??
+      (typeof window !== 'undefined' &&
+      (import.meta.env.PROD || window.location.hostname !== 'localhost')
+        ? window.location.origin
+        : 'http://localhost:3001');
     try {
       let res = await fetch('/health').catch(() => null);
       if (!res || !res.ok) {

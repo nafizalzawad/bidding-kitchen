@@ -26,10 +26,11 @@ export async function buildServer(options: BuildServerOptions = {}) {
 
   await fastify.register(cors, {
     origin: (origin, cb) => {
-      // In development allow any localhost origin or configured origin
+      // In development, Vercel deployments, or configured origin
       if (
         !origin ||
         origin === config.CORS_ORIGIN ||
+        origin.endsWith('.vercel.app') ||
         origin.startsWith('http://localhost:') ||
         origin.startsWith('http://127.0.0.1:')
       ) {
@@ -93,3 +94,5 @@ async function start() {
 if (process.env['NODE_ENV'] !== 'test') {
   start();
 }
+
+export default buildServer;

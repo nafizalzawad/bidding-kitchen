@@ -9,7 +9,20 @@ import type {
   TierId,
 } from '@bidding-kitchen/shared';
 
-const DEFAULT_SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3001';
+const resolveDefaultServerUrl = (): string => {
+  if (import.meta.env.VITE_SERVER_URL) {
+    return import.meta.env.VITE_SERVER_URL;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    // In production or when hosted on Vercel's unified domain, connect to current origin
+    if (import.meta.env.PROD || window.location.hostname !== 'localhost') {
+      return window.location.origin;
+    }
+  }
+  return 'http://localhost:3001';
+};
+
+const DEFAULT_SERVER_URL = resolveDefaultServerUrl();
 const ACK_TIMEOUT_MS = 5000;
 
 export class SocketClient {
