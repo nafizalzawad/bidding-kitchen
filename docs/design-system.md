@@ -249,5 +249,45 @@ Every FlavorTag features dual-coding: a high-contrast background plus an explici
 - Copies to system clipboard via `navigator.clipboard.writeText` and presents a confirmation toast (`"Match summary copied to clipboard!"`).
 - Dispatches telemetry event `SHARE_CLICKED`.
 
+---
+
+## 11. v1.5 Expansion Components & Visual Architecture (Phase 8)
+
+### 11.1 Multi-Tier Specifications
+Bidding Kitchen supports 3 canonical tiers, configured purely via data:
+
+| Tier ID | Display Name | Rounds | Budget | Mechanics Enabled | Plate Styling |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `STREET` | Street Burger | 5 | $20 | Customer Orders, Chef's Tip | Ceramic Burger Plate with checkered paper lining |
+| `BISTRO` | Bistro Pizza | 5 | $30 | Customer Orders, Chef's Tip | Round Wooden Pizza Peel with charred crust rim |
+| `CHEFS_TABLE` | Chef's Table | 6 | $40 | Customer Orders, Chef's Tip | Slate Platter with 6 designated fine dining courses |
+
+### 11.2 CustomerOrderBanner Component
+- **Location**: Top of `AuctionRoundScreen` (below TimerBar).
+- **Surface**: Dark charcoal container (`bg-[#1E293B]`) with amber border (`border-[#FFB703]`), star badge (`★`), and real-time status pill:
+  - If satisfied: Green badge (`bg-[#10B981] text-[#FFFFFF]`) with checkmark and `"Completed (+5 PTS)"`.
+  - If pending: Amber badge (`bg-[#F59E0B] text-[#1E1B18]`) with `"In Progress (+5 PTS)"`.
+- **A11y**: Role `status`, `aria-live="polite"`. High-contrast text exceeds WCAG AA thresholds (> 7:1).
+
+### 11.3 ChefsTipBanner Component
+- **Location**: Bidding header in `AuctionRoundScreen` during Round 4+.
+- **Surface**: Warm gold container (`bg-[#FFB703] border-2 border-[#1E1B18] shadow-[0_3px_0_#1E1B18]`).
+- **Content**: Coin icon, bold title `"Chef's Tip Awarded!"`, and explanation: `"+$2 cash bonus granted to balance the kitchen!"`.
+- **Motion**: Subtle rubber-band slide down with gold shimmer effect.
+
+### 11.4 ShareCardCanvas (16:9 PNG Card Generator)
+- **Canvas Resolution**: Fixed 800px x 450px HTML5 Canvas.
+- **Backdrop**: Linear dark gradient (`#1E293B` to `#0F172A`) with radial gold glow overlay (`rgba(255, 183, 3, 0.12)`).
+- **Content Rendered**:
+  1. Chunky outer frame (`#FFB703`, 6px line width) and inner ink line (`#1E1B18`, 2px).
+  2. Header: "BIDDING KITCHEN" brand title + Tier / Rounds badge.
+  3. Chef nickname & final score callout in bright green (`#10B981`).
+  4. Dynamic gourmet dish name.
+  5. 2-column plated ingredients list with color-coded flavor tags and taste points.
+  6. Completed combo synergy pills and Secret Order completion badge.
+  7. Footer watermark `"biddingkitchen.com"`.
+- **Export Action**: Native download button (`data-testid="download-share-png-btn"`) generates `bidding-kitchen-[nickname]-[tier].png` and fires `SHARE_CLICKED` telemetry.
+
+
 
 

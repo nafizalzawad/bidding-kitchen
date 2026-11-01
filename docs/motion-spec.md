@@ -119,3 +119,26 @@ All sound effects are synthesized procedurally in Web Audio without external fil
 | `RESOLVE` (600ms) | `cashRegisterChime` (or `fallbackBoop`) | Two-tone ka-ching (1046.5Hz C6 -> 2093Hz C7) or descending boop (440Hz -> 330Hz) | `medium` (30ms) | `resolve-checkpoint-2` (t=700ms) |
 | `RESOLVE` (950ms) | `ingredientSlapSizzle` | 90ms triangle thud (140Hz -> 55Hz) + 260ms noise sizzle (2000Hz) | `heavy` (50ms, 40ms, 60ms) | `resolve-checkpoint-3` (t=1600ms) |
 | `FINAL_REVEAL` (2600ms, Step 5) | `victoryFanfare` | 500ms C-major arpeggio (C5 -> E5 -> G5 -> C6) | `success` (20ms, 30ms, 40ms) | `final-reveal-step5` (t=3000ms) |
+
+---
+
+## 7. v1.5 Expansion Motion Dynamics (Phase 8)
+
+### 7.1 Customer Order Banner Progress & Completion
+- **Progress Update**: Whenever an awarded ingredient satisfies or increments a secret customer order tag requirement, the banner pill pulses (`scale: [1, 1.08, 1]` over 350ms with `easeOutCubic`).
+- **Completion Burst**: When fully fulfilled:
+  - Background transitions to green (`#10B981`) with a subtle gold glow ring (`box-shadow: 0 0 12px #FFB703`).
+  - Star badge pops with `scale: [1, 1.3, 1]` and triggers `cashRegisterChime`.
+  - Under `prefers-reduced-motion`: 100ms instant color transition without spatial scaling.
+
+### 7.2 Chef's Tip Catch-Up Slide
+- **Trigger**: Entering Round 4 `BIDDING` if the trailing chef is awarded the +$2 rubber-band bonus.
+- **Entry Motion**: Elastic slide down from `translateY(-16px)` to `0` with spring `bouncyKitchen` (stiffness: 420, damping: 20).
+- **Audio Cue**: Synthesizes a crisp dual coin drop (Web Audio `twoCoinsChink`, 880Hz -> 1320Hz).
+- **Haptic**: `medium` double-tap pattern (`[25ms, 40ms, 25ms]`).
+
+### 7.3 Multi-Tier Dish Visualizer Dynamics
+- **Burger Tier (`STREET`)**: Vertical drop stack (`translateY(-120px) -> 0`) with squash on impact (`scaleY(0.88)`).
+- **Pizza Tier (`BISTRO`)**: Concentric placement on round wooden peel (`scale(0.8) -> 1.0` with 5deg rotational settle).
+- **Steak Dinner Tier (`CHEFS_TABLE`)**: Elegant horizontal platter course presentation (`translateY(20px) -> 0` with 250ms smooth deceleration).
+
