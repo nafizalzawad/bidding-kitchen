@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
+import { useSound } from '../../hooks/useSound';
 
 export interface SoundToggleProps {
   muted?: boolean;
@@ -12,29 +13,19 @@ export const SoundToggle: React.FC<SoundToggleProps> = ({
   onToggle,
   className = '',
 }) => {
-  const [internalMuted, setInternalMuted] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const saved = localStorage.getItem('bk_sound_muted');
-      return saved === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const { isMuted: engineMuted, toggleMute, setMuted } = useSound();
 
-  const isMuted = controlledMuted !== undefined ? controlledMuted : internalMuted;
+  const isMuted = controlledMuted !== undefined ? controlledMuted : engineMuted;
 
   const handleToggle = () => {
-    const nextMuted = !isMuted;
-    if (controlledMuted === undefined) {
-      setInternalMuted(nextMuted);
-      try {
-        localStorage.setItem('bk_sound_muted', String(nextMuted));
-      } catch {
-        // Ignore localStorage errors
-      }
+    if (controlledMuted !== undefined) {
+      const nextMuted = !controlledMuted;
+      setMuted(nextMuted);
+      onToggle?.(nextMuted);
+    } else {
+      const nextMuted = toggleMute();
+      onToggle?.(nextMuted);
     }
-    onToggle?.(nextMuted);
   };
 
   return (

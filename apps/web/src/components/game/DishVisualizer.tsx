@@ -1,11 +1,14 @@
 import React from 'react';
 import type { AwardedIngredient } from '@bidding-kitchen/shared';
+import { useReducedMotion } from '../../hooks/useReducedMotion.js';
 
 export interface DishVisualizerProps {
   dish: AwardedIngredient[];
   chefName?: string;
   dishName?: string;
   isHero?: boolean;
+  elapsedMs?: number;
+  dishSlapPhase?: 'waiting' | 'slapping' | 'landed';
   className?: string;
 }
 
@@ -21,8 +24,17 @@ export const DishVisualizer: React.FC<DishVisualizerProps> = ({
   chefName,
   dishName,
   isHero = false,
+  elapsedMs,
+  dishSlapPhase,
   className = '',
 }) => {
+  const prefersReducedMotion = useReducedMotion();
+
+  const isSlapping =
+    !prefersReducedMotion &&
+    (dishSlapPhase === 'slapping' ||
+      (elapsedMs !== undefined && elapsedMs >= 950 && elapsedMs <= 1430));
+
   // Extract ingredients by slot
   const bunAward = dish.find((a) => a?.ingredient?.slot === 'BUN');
   const sauceAward = dish.find((a) => a?.ingredient?.slot === 'SAUCE');
@@ -105,8 +117,6 @@ export const DishVisualizer: React.FC<DishVisualizerProps> = ({
   const cheeseColor = getCheeseColor(cheeseAward?.ingredient.id);
   const toppingColor = getToppingColor(toppingAward?.ingredient.id);
 
-  // Stacking heights inside 200x140 SVG viewBox
-  // Plate base is at y = 115
   return (
     <div
       data-testid="dish-visualizer"
@@ -114,6 +124,16 @@ export const DishVisualizer: React.FC<DishVisualizerProps> = ({
         isHero ? 'min-h-[220px] p-4' : 'min-h-[88px] max-h-[88px] sm:min-h-[140px] sm:max-h-none p-2'
       } ${className}`}
     >
+      {/* Visual squash & impact sizzle indicator when slap is active */}
+      {isSlapping && (
+        <div
+          data-testid="dish-slap-active"
+          className="absolute inset-0 pointer-events-none flex items-center justify-center z-20"
+        >
+          <div className="w-20 h-8 rounded-full border-2 border-[#FFB703] animate-ping opacity-60" />
+        </div>
+      )}
+
       {/* Optional Top Label */}
       {(chefName || dishName) && (
         <div className="w-full flex items-center justify-between text-xs font-extrabold font-display px-2 text-[#1E1B18] z-10 shrink-0">
@@ -129,7 +149,9 @@ export const DishVisualizer: React.FC<DishVisualizerProps> = ({
       {/* SVG Culinary Stacking Canvas */}
       <svg
         viewBox="0 0 200 130"
-        className="w-full h-full max-h-[120px] sm:max-h-[160px] my-auto select-none overflow-visible"
+        className={`w-full h-full max-h-[120px] sm:max-h-[160px] my-auto select-none overflow-visible transition-transform duration-150 ${
+          isSlapping ? 'scale-y-[0.88] translate-y-1' : 'scale-y-100 translate-y-0'
+        }`}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Ceramic Plate Rim & Base */}

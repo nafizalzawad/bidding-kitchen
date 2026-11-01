@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import type { PublicMatchView, Ingredient } from '@bidding-kitchen/shared';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  PublicMatchView,
+  Ingredient,
+  getResolutionCueForPlayer,
+} from '@bidding-kitchen/shared';
 import { TimerBar } from '../components/ui/TimerBar.js';
+import { BudgetBar } from '../components/ui/BudgetBar.js';
 import { OpponentStatusHeader } from '../components/game/OpponentStatusHeader.js';
 import { DishVisualizer } from '../components/game/DishVisualizer.js';
 import { IngredientCard } from '../components/game/IngredientCard.js';
@@ -8,11 +13,16 @@ import { BidControls } from '../components/game/BidControls.js';
 import { BidFlipCompare } from '../components/game/BidFlipCompare.js';
 import { ConnectionBanner } from '../components/layout/ConnectionBanner.js';
 import { Layers } from 'lucide-react';
+import { useSound } from '../hooks/useSound.js';
+import { useHaptics } from '../hooks/useHaptics.js';
+import { useReducedMotion } from '../hooks/useReducedMotion.js';
+import { getResolveAnimationPhase } from '../tokens/motion-tokens.js';
 
 export interface AuctionRoundScreenProps {
   match: PublicMatchView;
   myPlayerId: string;
   countdownSeconds?: number;
+  forcedElapsedMs?: number;
   onLockBid?: (ingredientId: string, amount: number) => void;
 }
 
@@ -20,8 +30,13 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
   match,
   myPlayerId,
   countdownSeconds,
+  forcedElapsedMs,
   onLockBid,
 }) => {
+  const { playCue } = useSound();
+  const { triggerHaptic } = useHaptics();
+  const prefersReducedMotion = useReducedMotion();
+
   const p0 = match.players[0];
   const p1 = match.players[1];
 
@@ -75,6 +90,77 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
 
   const myBudget = me.budget ?? 0;
 
+  // Track elapsed time during RESOLVE for deterministic animation steps
+  const [liveElapsedMs, setLiveElapsedMs] = useState<number>(0);
+  const resolveStartTimeRef = useRef<number>(Date.now());
+  const firedCuesRef = useRef<Set<string>>(new Set());
+
+  // Parse ?animStepMs= from URL if present
+  const parsedAnimStepMs = (() => {
+    if (typeof window === 'undefined') return undefined;
+    try {
+      const param = new URLSearchParams(window.location.search).get('animStepMs');
+      return param !== null ? Number(param) : undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+
+  const effectiveElapsedMs = forcedElapsedMs ?? parsedAnimStepMs ?? liveElapsedMs;
+
+  useEffect(() => {
+    if (match.state === 'RESOLVE') {
+      resolveStartTimeRef.current = Date.now();
+      setLiveElapsedMs(0);
+      firedCuesRef.current.clear();
+
+      const timer = setInterval(() => {
+        setLiveElapsedMs(Date.now() - resolveStartTimeRef.current);
+      }, 16);
+
+      return () => clearInterval(timer);
+    } else {
+      firedCuesRef.current.clear();
+    }
+  }, [match.state, match.roundIndex]);
+
+  // Audio & Haptic trigger synchronization
+  useEffect(() => {
+    if (match.state !== 'RESOLVE') return;
+
+    // 1. At 0ms: cardFlipWhoosh
+    if (!firedCuesRef.current.has('whoosh') && effectiveElapsedMs >= 0) {
+      firedCuesRef.current.add('whoosh');
+      playCue('cardFlipWhoosh');
+      triggerHaptic('medium');
+    }
+
+    // 2. At 600ms: Resolution outcome cue
+    if (!firedCuesRef.current.has('outcome') && effectiveElapsedMs >= 600) {
+      firedCuesRef.current.add('outcome');
+      if (currentRound?.resolution) {
+        const cue = getResolutionCueForPlayer(currentRound.resolution, me.id);
+        if (cue.soundCue === 'CASH_WIN') {
+          playCue('cashRegisterChime');
+          triggerHaptic('light');
+        } else {
+          playCue('fallbackBoop');
+          triggerHaptic('light');
+        }
+      }
+    }
+
+    // 3. At 950ms: Ingredient slap and sizzle
+    if (!firedCuesRef.current.has('slap') && effectiveElapsedMs >= 950) {
+      firedCuesRef.current.add('slap');
+      playCue('ingredientSlapSizzle');
+      triggerHaptic('heavy');
+    }
+  }, [match.state, effectiveElapsedMs, currentRound?.resolution, me.id, playCue, triggerHaptic]);
+
+  // Animation phase calculations
+  const animPhase = getResolveAnimationPhase(effectiveElapsedMs, prefersReducedMotion);
+
   // Keep selection synchronized when round or fixture changes
   useEffect(() => {
     if (currentRound?.myLockedBid) {
@@ -94,6 +180,8 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
 
   const handleSelectIngredient = (ingredient: Ingredient) => {
     if (myLocked) return;
+    playCue('cardSlide');
+    triggerHaptic('light');
     setSelectedIngredient(ingredient);
     if (ingredient.isBasic || ingredient.basePrice === 0) {
       setBidAmount(0);
@@ -115,6 +203,12 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
     : currentRound
     ? Math.max(0, currentRound.deadlineAt - match.serverNow)
     : 15000;
+
+  // Deductions for BudgetBar during RESOLVE
+  const myAward = currentRound?.resolution?.awardsByPlayer?.[me.id];
+  const deductionAmount = myAward?.pricePaid ?? 0;
+  const currentBudget = me.budget ?? 0;
+  const previousBudget = currentBudget + deductionAmount;
 
   return (
     <div
@@ -140,17 +234,29 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
           dish={me.dish}
           chefName={me.nickname}
           dishName={`Your Burger (${me.dish.length}/5 Layers)`}
+          elapsedMs={isResolve ? effectiveElapsedMs : undefined}
+          dishSlapPhase={isResolve ? animPhase.dishSlapPhase : undefined}
         />
       </div>
 
       {/* 4. Main Interactive Area: Bidding or Round Resolution or Breather */}
       {isResolve && currentRound?.resolution && p0 && p1 ? (
-        <div className="flex-1 flex flex-col justify-center">
+        <div className="flex-1 flex flex-col justify-center gap-3">
+          {/* Animated Budget Bar during Resolution */}
+          <BudgetBar
+            budget={currentBudget}
+            previousBudget={previousBudget}
+            deductionAmount={deductionAmount}
+            drainProgress={animPhase.budgetDrainProgress}
+            label="Remaining Budget"
+          />
+
           <BidFlipCompare
             resolution={currentRound.resolution}
             p1={p0}
             p2={p1}
             myPlayerId={me.id}
+            elapsedMs={effectiveElapsedMs}
           />
         </div>
       ) : isRoundEnd ? (
@@ -185,7 +291,7 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
             data-testid="variants-grid"
             className="grid grid-cols-2 gap-2 sm:gap-3 flex-1 overflow-y-auto min-h-0"
           >
-            {available.map((ingredient) => {
+            {available.map((ingredient, idx) => {
               const cannotAfford = ingredient.basePrice > myBudget && !ingredient.isBasic;
               const isSelected = selectedIngredient?.id === ingredient.id;
 
@@ -193,6 +299,7 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
                 <IngredientCard
                   key={ingredient.id}
                   ingredient={ingredient}
+                  index={idx}
                   selected={isSelected}
                   disabled={cannotAfford || myLocked}
                   disabledReason={cannotAfford ? 'Need more $' : undefined}

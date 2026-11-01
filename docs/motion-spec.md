@@ -103,3 +103,19 @@ During Playwright visual QA (`static-screens.spec.ts`):
 1. Select Basic Beef (`$0`). Measure bounding box `{ x, y, width, height }` of `data-testid="lock-bid-btn"`.
 2. Select Wagyu (`$8`). Re-measure bounding box.
 3. Assert `Math.abs(y1 - y2) === 0`.
+
+---
+
+## 6. Audio-to-Frame Synchronization & Frame Checkpoints
+
+All sound effects are synthesized procedurally in Web Audio without external files and synchronized to exact animation timeline frames:
+
+| Match State & Elapsed Time | Audio Cue (`sound-engine.ts`) | Synthesis Characteristics | Haptic Pattern (`useHaptics.ts`) | Visual Checkpoint |
+| :--- | :--- | :--- | :--- | :--- |
+| `ROUND_REVEAL` (0ms) | `cardSlide` | 80ms bandpass noise sweep (400Hz -> 1200Hz) | None | Staggered cards enter |
+| `BIDDING` (stepper / tap) | `bidTick` | 35ms crisp woodblock sine pop (660Hz) | `light` (15ms) | Tabular amount ticks |
+| `BIDDING` (lock button) | `bidLockDing` | 220ms dual-sine service bell (880Hz + 1760Hz) | `medium` (30ms) | Lock stamp pop |
+| `RESOLVE` (0ms) | `cardFlipWhoosh` | 180ms bandpass noise sweep (300Hz -> 900Hz) | None | `resolve-checkpoint-1` (t=100ms) |
+| `RESOLVE` (600ms) | `cashRegisterChime` (or `fallbackBoop`) | Two-tone ka-ching (1046.5Hz C6 -> 2093Hz C7) or descending boop (440Hz -> 330Hz) | `medium` (30ms) | `resolve-checkpoint-2` (t=700ms) |
+| `RESOLVE` (950ms) | `ingredientSlapSizzle` | 90ms triangle thud (140Hz -> 55Hz) + 260ms noise sizzle (2000Hz) | `heavy` (50ms, 40ms, 60ms) | `resolve-checkpoint-3` (t=1600ms) |
+| `FINAL_REVEAL` (2600ms, Step 5) | `victoryFanfare` | 500ms C-major arpeggio (C5 -> E5 -> G5 -> C6) | `success` (20ms, 30ms, 40ms) | `final-reveal-step5` (t=3000ms) |

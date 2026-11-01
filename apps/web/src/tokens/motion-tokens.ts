@@ -128,3 +128,78 @@ export const CONNECTION_BANNER_MOTION = {
     transition: { repeat: Infinity, duration: 0.4 },
   },
 } as const;
+
+export interface ResolveAnimationPhase {
+  cardFlipPhase: 'face-down' | 'flipping' | 'face-up';
+  showOutcomeBadge: boolean;
+  dishSlapPhase: 'waiting' | 'slapping' | 'landed';
+  budgetDrainProgress: number;
+}
+
+/**
+ * Calculates deterministic visual animation phase flags for the 4000ms RESOLVE state timeline.
+ */
+export function getResolveAnimationPhase(
+  elapsedMs: number,
+  prefersReducedMotion: boolean,
+): ResolveAnimationPhase {
+  if (prefersReducedMotion) {
+    return {
+      cardFlipPhase: 'face-up',
+      showOutcomeBadge: true,
+      dishSlapPhase: 'landed',
+      budgetDrainProgress: 1,
+    };
+  }
+
+  // Card Flip: 0..200ms face-down, 201..549ms flipping, >= 550ms face-up
+  let cardFlipPhase: 'face-down' | 'flipping' | 'face-up' = 'face-down';
+  if (elapsedMs >= 550) {
+    cardFlipPhase = 'face-up';
+  } else if (elapsedMs > 200) {
+    cardFlipPhase = 'flipping';
+  }
+
+  // Outcome badges (Winner ring / Fallback boop) appear at 600ms
+  const showOutcomeBadge = elapsedMs >= 600;
+
+  // Dish Slap: waiting < 950ms, slapping 950..1430ms, landed > 1430ms
+  let dishSlapPhase: 'waiting' | 'slapping' | 'landed' = 'waiting';
+  if (elapsedMs > 1430) {
+    dishSlapPhase = 'landed';
+  } else if (elapsedMs >= 950) {
+    dishSlapPhase = 'slapping';
+  }
+
+  // Budget Drain: 0 < 1100ms, progress 0..1 from 1100..1550ms, 1 > 1550ms
+  let budgetDrainProgress = 0;
+  if (elapsedMs >= 1550) {
+    budgetDrainProgress = 1;
+  } else if (elapsedMs >= 1100) {
+    budgetDrainProgress = Math.max(0, Math.min(1, (elapsedMs - 1100) / 450));
+  }
+
+  return {
+    cardFlipPhase,
+    showOutcomeBadge,
+    dishSlapPhase,
+    budgetDrainProgress,
+  };
+}
+
+/**
+ * Calculates current active step (1 to 5) for the Final Reveal scoreboard tally.
+ */
+export function getFinalRevealStep(
+  elapsedMs: number,
+  prefersReducedMotion: boolean,
+): 1 | 2 | 3 | 4 | 5 {
+  if (prefersReducedMotion) {
+    return 5;
+  }
+  if (elapsedMs < 650) return 1;
+  if (elapsedMs < 1300) return 2;
+  if (elapsedMs < 1950) return 3;
+  if (elapsedMs < 2600) return 4;
+  return 5;
+}

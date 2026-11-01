@@ -72,6 +72,9 @@ export const StorybookHarnessScreen: React.FC<StorybookHarnessScreenProps> = ({
   const stateData = MOCK_HARNESS_STATES[activeKey];
   const keys = Object.keys(MOCK_HARNESS_STATES) as HarnessStateKey[];
 
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const animStepMs = urlParams?.get('animStepMs') ? Number(urlParams.get('animStepMs')) : undefined;
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-[#FFFDF7] flex flex-col text-[#1E1B18]">
@@ -240,12 +243,14 @@ export const StorybookHarnessScreen: React.FC<StorybookHarnessScreenProps> = ({
                 match={stateData.match!}
                 myPlayerId={stateData.myPlayerId}
                 countdownSeconds={stateData.countdownSeconds}
+                forcedElapsedMs={animStepMs}
                 onLockBid={(_ingredientId, _amount) => handleSelectState('BIDDING_LOCKED_WAITING')}
               />
             ) : activeKey === 'FINAL_REVEAL' ? (
               <FinalRevealScreen
                 match={stateData.match!}
                 myPlayerId={stateData.myPlayerId}
+                forcedElapsedMs={animStepMs}
                 onProceed={() => handleSelectState('POST_MATCH')}
               />
             ) : activeKey === 'POST_MATCH' ? (

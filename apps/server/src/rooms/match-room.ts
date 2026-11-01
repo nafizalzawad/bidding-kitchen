@@ -22,6 +22,7 @@ import {
 import { sanitizeMatchForPlayer } from './state-sanitizer.js';
 import { TimerController } from './timer-controller.js';
 import { config } from '../config.js';
+import { globalMetrics } from '../metrics.js';
 
 export interface MatchRoomOptions {
   timerScale?: number;
@@ -460,7 +461,11 @@ export class MatchRoom {
   private onLockedTimeout(): void {
     if (this.match.state !== 'LOCKED') return;
     const now = Date.now();
+    const t0 = performance.now();
     const { updatedMatch, resolution } = resolveRound(this.match);
+    const resolveDuration = performance.now() - t0;
+    globalMetrics.recordRoundResolveDuration(resolveDuration);
+
     this.match = transitionState(updatedMatch, 'RESOLVE', now);
     const duration = this.getTransitionDuration('RESOLVE');
     this.match.stateDeadlineAt = now + duration;
@@ -517,7 +522,11 @@ export class MatchRoom {
       });
     } else {
       // Match complete -> finalize and transition to FINAL_REVEAL
+      const tResult0 = performance.now();
       this.match = finalizeMatch(this.match);
+      const resultDuration = performance.now() - tResult0;
+      globalMetrics.recordRoundResolveDuration(resultDuration);
+
       this.match = transitionState(this.match, 'FINAL_REVEAL', now);
       const duration = this.getTransitionDuration('FINAL_REVEAL');
       this.match.stateDeadlineAt = now + duration;

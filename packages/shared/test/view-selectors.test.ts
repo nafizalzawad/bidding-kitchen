@@ -5,10 +5,12 @@ import {
   getRemainingStateMs,
   getComboProgressForDish,
   isVariantAffordable,
+  getResolutionCueForPlayer,
   STREET_INGREDIENTS,
   type AwardedIngredient,
   type PublicMatchView,
   type PublicPlayerView,
+  type RoundResolution,
 } from '../src/index.js';
 
 describe('View Selectors and Client Helpers', () => {
@@ -147,5 +149,70 @@ describe('View Selectors and Client Helpers', () => {
     expect(isVariantAffordable(wagyu, 8)).toBe(true);
     expect(isVariantAffordable(wagyu, 10)).toBe(true);
     expect(isVariantAffordable(wagyu, 7)).toBe(false);
+  });
+
+  it('getResolutionCueForPlayer computes animation deltas, sound cues, and microcopy correctly', () => {
+    const wagyu = STREET_INGREDIENTS.find((i) => i.id === 'street_patty_wagyu')!;
+    const basicBeef = STREET_INGREDIENTS.find((i) => i.id === 'street_patty_basic')!;
+
+    // Worked Example 2: Collision on Wagyu where p0 bids $9 and p1 bids $8
+    const collisionResolution: RoundResolution = {
+      roundIndex: 1,
+      slot: 'PATTY',
+      bidsByPlayer: {
+        p0: { playerId: 'p0', roundIndex: 1, ingredientId: 'street_patty_wagyu', amount: 9, lockedAt: 1000, isAutoTimeoutBid: false },
+        p1: { playerId: 'p1', roundIndex: 1, ingredientId: 'street_patty_wagyu', amount: 8, lockedAt: 1000, isAutoTimeoutBid: false },
+      },
+      outcomeType: 'COLLISION_HIGH_BID',
+      awardsByPlayer: {
+        p0: { roundIndex: 1, slot: 'PATTY', ingredient: wagyu, pricePaid: 9, wonVia: 'HIGH_BID' },
+        p1: { roundIndex: 1, slot: 'PATTY', ingredient: basicBeef, pricePaid: 0, wonVia: 'FALLBACK_LOSS' },
+      },
+      budgetsBeforeRound: { p0: 16, p1: 18 },
+      budgetsAfterRound: { p0: 7, p1: 18 },
+      chefsTipAwardedToPlayerId: null,
+    };
+
+    // p0: Winner
+    const p0Cue = getResolutionCueForPlayer(collisionResolution, 'p0');
+    expect(p0Cue.budgetDelta).toBe(-9);
+    expect(p0Cue.isCollision).toBe(true);
+    expect(p0Cue.didIWinCollision).toBe(true);
+    expect(p0Cue.soundCue).toBe('CASH_WIN');
+    expect(p0Cue.bannerTitle).toBe('You Outbid Opponent!');
+    expect(p0Cue.bannerSubtitle).toBe('Won Wagyu for $9!');
+
+    // p1: Loser taking Basic Beef fallback
+    const p1Cue = getResolutionCueForPlayer(collisionResolution, 'p1');
+    expect(p1Cue.budgetDelta).toBe(0);
+    expect(p1Cue.isCollision).toBe(true);
+    expect(p1Cue.didIWinCollision).toBe(false);
+    expect(p1Cue.soundCue).toBe('FALLBACK_BOOP');
+    expect(p1Cue.bannerTitle).toBe('Outbid on Wagyu!');
+    expect(p1Cue.bannerSubtitle).toBe('Kept your cash & took free Basic Beef ($0).');
+
+    // Uncontested win with Chef's tip
+    const brioche = STREET_INGREDIENTS.find((i) => i.id === 'street_bun_brioche')!;
+    const uncontestedResolution: RoundResolution = {
+      roundIndex: 0,
+      slot: 'BUN',
+      bidsByPlayer: {
+        p0: { playerId: 'p0', roundIndex: 0, ingredientId: 'street_bun_brioche', amount: 4, lockedAt: 500, isAutoTimeoutBid: false },
+      },
+      outcomeType: 'NO_COLLISION',
+      awardsByPlayer: {
+        p0: { roundIndex: 0, slot: 'BUN', ingredient: brioche, pricePaid: 4, wonVia: 'UNCONTESTED' },
+      },
+      budgetsBeforeRound: { p0: 20 },
+      budgetsAfterRound: { p0: 16 },
+      chefsTipAwardedToPlayerId: 'p0',
+    };
+
+    const uncontestedCue = getResolutionCueForPlayer(uncontestedResolution, 'p0');
+    expect(uncontestedCue.budgetDelta).toBe(-4);
+    expect(uncontestedCue.isCollision).toBe(false);
+    expect(uncontestedCue.soundCue).toBe('CASH_WIN');
+    expect(uncontestedCue.bannerTitle).toBe('Uncontested Win!');
+    expect(uncontestedCue.bannerSubtitle).toBe("Won Brioche for $4! + $2 Chef's Tip!");
   });
 });

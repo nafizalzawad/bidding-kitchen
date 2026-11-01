@@ -171,3 +171,33 @@ Every FlavorTag features dual-coding: a high-contrast background plus an explici
 - If reconnection fails (`ROOM_NOT_FOUND`, `ROOM_EXPIRED`, or `UNAUTHORIZED_RECONNECT`): Clears `sessionStorage`, displays a toast (`"Previous match ended or expired"`), and returns to `LandingScreen`.
 - Disconnect banner: Displays 30-second countdown in `ConnectionBanner` when opponent disconnects. Transitions to Forfeit victory screen if timeout expires.
 
+---
+
+## 9. Animation, Audio & Juice Specifications (Phase 6)
+
+### 9.1 Mystery Bid Card Back (Pre-Flip at t < 275ms of RESOLVE)
+- **Background**: Ink Charcoal `#1E1B18` with `#FFB703` (mustard yellow) dashed border.
+- **Centerpiece**: Chef Hat / Cloche crest SVG emblem with `#FFB703` stroke.
+- **Microcopy**: `"SEALED BID"` in uppercase bold tracked display font.
+- **Contrast**: `#FFB703` on `#1E1B18` yields `10.8:1` contrast (exceeds WCAG AAA).
+
+### 9.2 Revealed Bid Card Face (Post-Flip at t >= 275ms of RESOLVE)
+- **Background**: White `#FFFFFF` with 2px solid `#1E1B18` border and drop shadow `shadow-[0_4px_0_#1E1B18]`.
+- **Content**: Player nickname badge, `IngredientArt` (48px), ingredient variant name, large tabular bid amount (`$9`).
+- **Winner Outcome Ring**: `#1D7A4C` green border ring, gold badge `"Won for $9!"`.
+- **Loser Outcome Pill**: `#FFB703` amber badge with shield `"Free Basic ($0)"`.
+
+### 9.3 Floating Cash Deduction Pill (`BudgetBar`)
+- When `budgetDelta < 0` (e.g. `-$9` spent on Wagyu):
+  - Floating pill `-$$pricePaid` rendered in `#E63946` (Tomato Red) with white bold text.
+  - Floats upward by `16px` while fading out over `450ms`.
+  - Budget track width drains synchronously using `easeOutCubic`.
+
+### 9.4 Stepwise Scoreboard Progression (`FinalRevealScreen`)
+1. **Step 1 (0–650ms)**: "1. Ingredient Taste Points" highlights and counts up from `0` to `tastePoints`.
+2. **Step 2 (650–1300ms)**: "2. Combo Bonuses" reveals earned combo pills (`SMOKEHOUSE +4`, `HOT & DECADENT +3`).
+3. **Step 3 (1300–1950ms)**: "3. Customer Order" reveals bonus (`+0` in MVP).
+4. **Step 4 (1950–2600ms)**: "4. Leftover Cash Bonus" highlights unspent dollars converted to points.
+5. **Step 5 (>= 2600ms)**: Final total scores pop up, winner crown is stamped, and confetti bursts.
+
+

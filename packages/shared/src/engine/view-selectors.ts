@@ -1,11 +1,108 @@
 import { COMBO_DEFINITIONS } from '../data/combos.js';
 import type {
   AwardedIngredient,
+  Bid,
   ComboAward,
   Ingredient,
   PublicMatchView,
   PublicPlayerView,
+  RoundResolution,
 } from '../types/models.js';
+
+export interface ResolutionCue {
+  myBid: Bid | undefined;
+  opponentBid: Bid | undefined;
+  myAward: AwardedIngredient | undefined;
+  opponentAward: AwardedIngredient | undefined;
+  budgetDelta: number;
+  isCollision: boolean;
+  didIWinCollision: boolean;
+  soundCue: 'CASH_WIN' | 'FALLBACK_BOOP' | 'BASIC_FREE';
+  bannerTitle: string;
+  bannerSubtitle: string;
+}
+
+/**
+ * Computes round-over-round animation deltas, outcome category, sound cue,
+ * and presentation banner microcopy for a given player based on RoundResolution.
+ */
+export function getResolutionCueForPlayer(
+  resolution: RoundResolution,
+  playerId: string,
+): ResolutionCue {
+  const myBid = resolution.bidsByPlayer[playerId];
+  const opponentPlayerId = Object.keys(resolution.bidsByPlayer).find((id) => id !== playerId);
+  const opponentBid = opponentPlayerId ? resolution.bidsByPlayer[opponentPlayerId] : undefined;
+
+  const myAward = resolution.awardsByPlayer[playerId];
+  const opponentAward = opponentPlayerId ? resolution.awardsByPlayer[opponentPlayerId] : undefined;
+
+  const budgetBefore = resolution.budgetsBeforeRound[playerId] ?? 0;
+  const budgetAfter = resolution.budgetsAfterRound[playerId] ?? 0;
+  const budgetDelta = budgetAfter - budgetBefore;
+
+  const isCollision = resolution.outcomeType !== 'NO_COLLISION';
+  const didIWinCollision =
+    isCollision &&
+    Boolean(
+      myAward &&
+        (myAward.wonVia === 'HIGH_BID' ||
+          myAward.wonVia === 'TIEBREAK_BUDGET' ||
+          myAward.wonVia === 'TIEBREAK_COINFLIP'),
+    );
+
+  let soundCue: 'CASH_WIN' | 'FALLBACK_BOOP' | 'BASIC_FREE';
+  if (myAward?.wonVia === 'FALLBACK_LOSS' || myAward?.wonVia === 'TIMEOUT_BASIC') {
+    soundCue = 'FALLBACK_BOOP';
+  } else if (myAward?.ingredient.isBasic && myAward.pricePaid === 0) {
+    soundCue = 'BASIC_FREE';
+  } else {
+    soundCue = 'CASH_WIN';
+  }
+
+  let bannerTitle = '';
+  let bannerSubtitle = '';
+
+  if (isCollision) {
+    if (didIWinCollision) {
+      bannerTitle = 'You Outbid Opponent!';
+      bannerSubtitle = `Won ${myAward?.ingredient.name ?? 'Ingredient'} for $${myAward?.pricePaid ?? 0}!`;
+    } else {
+      const oppItemName = opponentAward?.ingredient.name ?? 'Ingredient';
+      bannerTitle = `Outbid on ${oppItemName}!`;
+      const fallbackName = myAward?.ingredient.name ?? 'Item';
+      const fallbackLabel = fallbackName.toLowerCase().startsWith('basic')
+        ? fallbackName
+        : `Basic ${fallbackName}`;
+      bannerSubtitle = `Kept your cash & took free ${fallbackLabel} ($0).`;
+    }
+  } else {
+    if (myAward?.ingredient.isBasic) {
+      bannerTitle = 'Basic Item Claimed';
+      bannerSubtitle = `Plated ${myAward.ingredient.name} for $0.`;
+    } else {
+      bannerTitle = 'Uncontested Win!';
+      bannerSubtitle = `Won ${myAward?.ingredient.name ?? 'Ingredient'} for $${myAward?.pricePaid ?? 0}!`;
+    }
+  }
+
+  if (resolution.chefsTipAwardedToPlayerId === playerId) {
+    bannerSubtitle += " + $2 Chef's Tip!";
+  }
+
+  return {
+    myBid,
+    opponentBid,
+    myAward,
+    opponentAward,
+    budgetDelta,
+    isCollision,
+    didIWinCollision,
+    soundCue,
+    bannerTitle,
+    bannerSubtitle,
+  };
+}
 
 /**
  * Returns the viewer's PublicPlayerView from PublicMatchView.

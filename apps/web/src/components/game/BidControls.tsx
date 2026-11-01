@@ -2,6 +2,8 @@ import React from 'react';
 import type { Ingredient } from '@bidding-kitchen/shared';
 import { Button } from '../ui/Button.js';
 import { Lock, Plus, Minus, CheckCircle2 } from 'lucide-react';
+import { useSound } from '../../hooks/useSound.js';
+import { useHaptics } from '../../hooks/useHaptics.js';
 
 export interface BidControlsProps {
   selectedIngredient: Ingredient | null;
@@ -22,6 +24,9 @@ export const BidControls: React.FC<BidControlsProps> = ({
   onLockBid,
   className = '',
 }) => {
+  const { playCue } = useSound();
+  const { triggerHaptic } = useHaptics();
+
   if (!selectedIngredient) {
     return (
       <div
@@ -44,20 +49,35 @@ export const BidControls: React.FC<BidControlsProps> = ({
 
   const handleDecrement = () => {
     if (canDecrement) {
+      playCue('bidTick');
+      triggerHaptic('light');
       onChangeBid(bidAmount - 1);
     }
   };
 
   const handleIncrement = () => {
     if (canIncrement) {
+      playCue('bidTick');
+      triggerHaptic('light');
       onChangeBid(bidAmount + 1);
     }
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLocked && !isBasic) {
-      onChangeBid(Number(e.target.value));
+      const nextVal = Number(e.target.value);
+      if (nextVal !== bidAmount) {
+        playCue('bidTick');
+        triggerHaptic('light');
+        onChangeBid(nextVal);
+      }
     }
+  };
+
+  const handleLockClick = () => {
+    playCue('bidLockDing');
+    triggerHaptic('medium');
+    onLockBid();
   };
 
   return (
@@ -145,7 +165,7 @@ export const BidControls: React.FC<BidControlsProps> = ({
             variant="primary"
             size="lg"
             fullWidth
-            onClick={onLockBid}
+            onClick={handleLockClick}
             icon={<Lock className="w-5 h-5" />}
           >
             {isBasic
