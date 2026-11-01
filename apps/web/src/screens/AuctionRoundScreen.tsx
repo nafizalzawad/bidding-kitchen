@@ -15,7 +15,7 @@ import { IngredientCard } from '../components/game/IngredientCard.js';
 import { BidControls } from '../components/game/BidControls.js';
 import { BidFlipCompare } from '../components/game/BidFlipCompare.js';
 import { ConnectionBanner } from '../components/layout/ConnectionBanner.js';
-import { Layers } from 'lucide-react';
+import { Layers, Sparkles, Lock } from 'lucide-react';
 import { useSound } from '../hooks/useSound.js';
 import { useHaptics } from '../hooks/useHaptics.js';
 import { useReducedMotion } from '../hooks/useReducedMotion.js';
@@ -25,6 +25,7 @@ export interface AuctionRoundScreenProps {
   match: PublicMatchView;
   myPlayerId: string;
   countdownSeconds?: number;
+  stateRemainingMs?: number;
   forcedElapsedMs?: number;
   onLockBid?: (ingredientId: string, amount: number) => void;
 }
@@ -33,6 +34,7 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
   match,
   myPlayerId,
   countdownSeconds,
+  stateRemainingMs,
   forcedElapsedMs,
   onLockBid,
 }) => {
@@ -201,11 +203,17 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
 
   const slotName = currentRound?.slot ?? 'INGREDIENT';
   const roundNum = (currentRound?.roundIndex ?? match.roundIndex) + 1;
-  const timeRemainingMs = countdownSeconds
-    ? countdownSeconds * 1000
-    : currentRound
-    ? Math.max(0, currentRound.deadlineAt - match.serverNow)
-    : 15000;
+  const isRoundReveal = match.state === 'ROUND_REVEAL';
+  const isLockedState = match.state === 'LOCKED';
+
+  const timeRemainingMs =
+    match.state === 'BIDDING' && stateRemainingMs !== undefined
+      ? stateRemainingMs
+      : countdownSeconds
+      ? countdownSeconds * 1000
+      : currentRound
+      ? Math.max(0, currentRound.deadlineAt - match.serverNow)
+      : 15000;
 
   // Deductions for BudgetBar during RESOLVE
   const myAward = currentRound?.resolution?.awardsByPlayer?.[me.id];
@@ -245,10 +253,60 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
         countdownSeconds={countdownSeconds ?? 28}
       />
 
-      {/* 2. Top Header HUD: Opponent Status & Timer */}
+      {/* 2. Top Header HUD: Opponent Status & Timer / Round State Banners */}
       <div className="space-y-2 shrink-0">
         <OpponentStatusHeader opponent={opponent} isLocked={opponentLocked} />
-        <TimerBar timeRemainingMs={timeRemainingMs} />
+
+        {isRoundReveal ? (
+          <div
+            data-testid="round-reveal-banner"
+            className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-[#FFB703] border-2 border-[#1E1B18] shadow-[0_3px_0_#1E1B18] text-xs font-black text-[#1E1B18]"
+          >
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[#1E1B18]" />
+              <span>Round {roundNum} of 5: {slotName} Auction</span>
+            </span>
+            <span className="bg-[#FFFFFF] px-2.5 py-0.5 rounded-full border border-[#1E1B18] tabular-nums">
+              Bidding opens in {countdownSeconds ?? 2}s...
+            </span>
+          </div>
+        ) : isLockedState ? (
+          <div
+            data-testid="bids-locked-banner"
+            className="w-full py-2 px-3.5 rounded-2xl bg-[#1E1B18] text-[#FFFFFF] text-xs font-black flex items-center justify-center gap-2 shadow-[0_3px_0_#1E1B18]"
+          >
+            <Lock className="w-4 h-4 text-[#FFB703]" />
+            <span>All Bids Locked! Revealing cards...</span>
+          </div>
+        ) : isResolve ? (
+          <div
+            data-testid="round-resolving-banner"
+            className="w-full py-2 px-3.5 rounded-2xl bg-[#FFFDF7] border-2 border-[#1E1B18] text-[#1E1B18] text-xs font-black flex items-center justify-between shadow-[0_3px_0_#1E1B18]"
+          >
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[#1D7A4C]" />
+              <span>Resolving Round Outcome</span>
+            </span>
+            <span className="text-[11px] font-bold text-[#57514A]">
+              Revealing Bids & Awards...
+            </span>
+          </div>
+        ) : isRoundEnd ? (
+          <div
+            data-testid="round-end-banner"
+            className="w-full py-2 px-3.5 rounded-2xl bg-[#FFFDF7] border-2 border-[#1E1B18] text-[#1E1B18] text-xs font-black flex items-center justify-between shadow-[0_3px_0_#1E1B18]"
+          >
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[#FFB703]" />
+              <span>Round {roundNum} Complete</span>
+            </span>
+            <span className="text-[11px] font-bold text-[#57514A]">
+              Next round in {countdownSeconds ?? 3}s...
+            </span>
+          </div>
+        ) : (
+          <TimerBar timeRemainingMs={timeRemainingMs} />
+        )}
       </div>
 
       {/* Customer Secret Order Objective */}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { PublicMatchView } from '@bidding-kitchen/shared';
-import { generateDishName } from '@bidding-kitchen/shared';
+import { generateDishName, getIngredientsBySlot } from '@bidding-kitchen/shared';
 import { Button } from '../components/ui/Button.js';
 import { Card } from '../components/ui/Card.js';
 import { Trophy, RefreshCw, Layers, Home, ChevronDown, ChevronUp, Swords, Share2 } from 'lucide-react';
@@ -36,6 +36,15 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
 
   const winner = (p0.id === result?.winnerId ? p0 : p1) ?? p1;
   const myPlayer = match.players.find((p) => p && p.id === myPlayerId) ?? winner;
+
+  const isTie = !result?.winnerId || result.winnerId === 'TIE';
+  const isP0Winner = !isTie && winner.id === p0.id;
+  const isP1Winner = !isTie && winner.id === p1.id;
+
+  const p0FinalScore = p0Score?.finalScore ?? 0;
+  const p1FinalScore = p1Score?.finalScore ?? 0;
+  const winnerFinalScore = winner.id === p0.id ? p0FinalScore : p1FinalScore;
+  const loserFinalScore = winner.id === p0.id ? p1FinalScore : p0FinalScore;
 
   const p0DishName = p0Score?.generatedDishName ?? generateDishName(p0.dish);
   const p1DishName = p1Score?.generatedDishName ?? generateDishName(p1.dish);
@@ -86,10 +95,12 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
           <span>Match Complete</span>
         </span>
         <h2 className="text-2xl sm:text-3xl font-black font-display text-[#1E1B18]">
-          {winner.nickname} Victorious!
+          {isTie ? "It's a Tie!" : `${winner.nickname} Victorious!`}
         </h2>
         <p className="text-xs text-[#57514A] font-bold mt-1">
-          Final Score: {p1Score?.finalScore ?? 37} to {p0Score?.finalScore ?? 31}
+          {isTie
+            ? `Final Score: Tied at ${p0FinalScore} pts`
+            : `Final Score: ${winnerFinalScore} to ${loserFinalScore}`}
         </p>
       </div>
 
@@ -109,24 +120,68 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
 
       {/* Finished Dishes Recap */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-2xl border-2 border-[#1E1B18] bg-[#FFFFFF] shadow-[0_3px_0_#1E1B18] text-center">
-          <span className="text-xs font-black font-display block text-[#1E1B18] truncate">
-            {p0.nickname}
-          </span>
+        {/* P0 Dish Card */}
+        <div
+          data-testid="post-match-card-p0"
+          className={`p-3 rounded-2xl border-2 border-[#1E1B18] shadow-[0_3px_0_#1E1B18] text-center transition ${
+            isP0Winner ? 'bg-[#FFFDF7] ring-2 ring-[#1D7A4C]' : 'bg-[#FFFFFF]'
+          }`}
+        >
+          <div className="flex items-center justify-center gap-1">
+            <span
+              className={`text-xs font-black font-display truncate ${
+                isP0Winner ? 'text-[#1D7A4C]' : 'text-[#1E1B18]'
+              }`}
+            >
+              {p0.nickname} {p0.id === myPlayerId ? '(You)' : ''}
+            </span>
+            {isP0Winner && <span aria-label="Winner">👑</span>}
+          </div>
           <p className="text-[11px] font-bold text-[#57514A] truncate">{p0DishName}</p>
-          <span className="text-lg font-black text-[#1E1B18] block mt-1">
-            {p0Score?.finalScore ?? 31} pts
+          <span
+            className={`text-lg font-black block mt-1 ${
+              isP0Winner ? 'text-[#1D7A4C]' : 'text-[#1E1B18]'
+            }`}
+          >
+            {p0FinalScore} pts
           </span>
+          {isP0Winner && (
+            <span className="inline-block px-2 py-0.5 mt-1 rounded-full bg-[#1D7A4C] text-[#FFFFFF] text-[10px] font-black uppercase tracking-wider">
+              Winner
+            </span>
+          )}
         </div>
 
-        <div className="p-3 rounded-2xl border-2 border-[#1E1B18] bg-[#FFFDF7] ring-2 ring-[#1D7A4C] shadow-[0_3px_0_#1E1B18] text-center">
-          <span className="text-xs font-black font-display block text-[#1D7A4C] truncate">
-            {p1.nickname} 👑
-          </span>
+        {/* P1 Dish Card */}
+        <div
+          data-testid="post-match-card-p1"
+          className={`p-3 rounded-2xl border-2 border-[#1E1B18] shadow-[0_3px_0_#1E1B18] text-center transition ${
+            isP1Winner ? 'bg-[#FFFDF7] ring-2 ring-[#1D7A4C]' : 'bg-[#FFFFFF]'
+          }`}
+        >
+          <div className="flex items-center justify-center gap-1">
+            <span
+              className={`text-xs font-black font-display truncate ${
+                isP1Winner ? 'text-[#1D7A4C]' : 'text-[#1E1B18]'
+              }`}
+            >
+              {p1.nickname} {p1.id === myPlayerId ? '(You)' : ''}
+            </span>
+            {isP1Winner && <span aria-label="Winner">👑</span>}
+          </div>
           <p className="text-[11px] font-bold text-[#57514A] truncate">{p1DishName}</p>
-          <span className="text-lg font-black text-[#1D7A4C] block mt-1">
-            {p1Score?.finalScore ?? 37} pts
+          <span
+            className={`text-lg font-black block mt-1 ${
+              isP1Winner ? 'text-[#1D7A4C]' : 'text-[#1E1B18]'
+            }`}
+          >
+            {p1FinalScore} pts
           </span>
+          {isP1Winner && (
+            <span className="inline-block px-2 py-0.5 mt-1 rounded-full bg-[#1D7A4C] text-[#FFFFFF] text-[10px] font-black uppercase tracking-wider">
+              Winner
+            </span>
+          )}
         </div>
       </div>
 
@@ -164,16 +219,39 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
                   const a1 = h.awardsByPlayer[p1.id];
                   const hadCollision = h.outcomeType !== 'NO_COLLISION';
 
+                  const slotIngredients = getIngredientsBySlot(match.tier, h.slot);
+                  const target0 = slotIngredients.find((ing) => ing.id === b0?.ingredientId);
+                  const target1 = slotIngredients.find((ing) => ing.id === b1?.ingredientId);
+
+                  const bid0Name = target0?.name ?? a0?.ingredient?.name ?? 'Basic';
+                  const bid1Name = target1?.name ?? a1?.ingredient?.name ?? 'Basic';
+
+                  const award0Name = a0?.ingredient?.name ?? 'Basic';
+                  const award1Name = a1?.ingredient?.name ?? 'Basic';
+
+                  const p0FellBack = hadCollision && a0?.ingredient?.id !== b0?.ingredientId;
+                  const p1FellBack = hadCollision && a1?.ingredient?.id !== b1?.ingredientId;
+
                   return (
                     <tr key={i} className="hover:bg-[#FFFDF7]">
                       <td className="p-2 sm:p-2.5 font-bold font-display text-[#1E1B18]">
                         R{h.roundIndex + 1}: {h.slot}
                       </td>
                       <td className="p-2 sm:p-2.5 text-[#1E1B18]">
-                        <span className="font-black text-[#DC2626]">${b0?.amount ?? 0}</span> ({a0?.ingredient?.name ?? 'Basic'})
+                        <span className="font-black text-[#DC2626]">${b0?.amount ?? 0}</span> ({bid0Name})
+                        {p0FellBack && (
+                          <span className="block text-[10px] font-bold text-[#57514A]">
+                            ↳ Fallback: {award0Name}
+                          </span>
+                        )}
                       </td>
                       <td className="p-2 sm:p-2.5 text-[#1E1B18]">
-                        <span className="font-black text-[#DC2626]">${b1?.amount ?? 0}</span> ({a1?.ingredient?.name ?? 'Basic'})
+                        <span className="font-black text-[#DC2626]">${b1?.amount ?? 0}</span> ({bid1Name})
+                        {p1FellBack && (
+                          <span className="block text-[10px] font-bold text-[#57514A]">
+                            ↳ Fallback: {award1Name}
+                          </span>
+                        )}
                       </td>
                       <td className="p-2 sm:p-2.5">
                         {hadCollision ? (

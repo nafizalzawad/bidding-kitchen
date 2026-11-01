@@ -38,6 +38,10 @@ export const FinalRevealScreen: React.FC<FinalRevealScreenProps> = ({
   const winner = (p0.id === result?.winnerId ? p0 : p1) ?? p1;
   const winnerScore = winner.id === p0.id ? p0Score : p1Score;
 
+  const isTie = !result?.winnerId || result.winnerId === 'TIE';
+  const isP0Winner = !isTie && winner.id === p0.id;
+  const isP1Winner = !isTie && winner.id === p1.id;
+
   const p0DishName = p0Score?.generatedDishName ?? generateDishName(p0.dish);
   const p1DishName = p1Score?.generatedDishName ?? generateDishName(p1.dish);
 
@@ -156,8 +160,8 @@ export const FinalRevealScreen: React.FC<FinalRevealScreenProps> = ({
           />
           <span className="text-xs font-black font-display text-[#1E1B18] mt-1.5">
             {p0.nickname}:{' '}
-            <strong className="text-base text-[#1E1B18]">
-              {showTotal ? `${p0Score?.finalScore ?? 0} pts` : `${p0Score?.tastePoints ?? 0} pts...`}
+            <strong className={`text-base ${isP0Winner ? 'text-[#1D7A4C]' : 'text-[#1E1B18]'}`}>
+              {showTotal ? `${p0Score?.finalScore ?? 0} pts${isP0Winner ? ' 👑' : ''}` : `${p0Score?.tastePoints ?? 0} pts...`}
             </strong>
           </span>
         </div>
@@ -172,8 +176,8 @@ export const FinalRevealScreen: React.FC<FinalRevealScreenProps> = ({
           />
           <span className="text-xs font-black font-display text-[#1E1B18] mt-1.5">
             {p1.nickname}:{' '}
-            <strong className="text-base text-[#1D7A4C]">
-              {showTotal ? `${p1Score?.finalScore ?? 0} pts 👑` : `${p1Score?.tastePoints ?? 0} pts...`}
+            <strong className={`text-base ${isP1Winner ? 'text-[#1D7A4C]' : 'text-[#1E1B18]'}`}>
+              {showTotal ? `${p1Score?.finalScore ?? 0} pts${isP1Winner ? ' 👑' : ''}` : `${p1Score?.tastePoints ?? 0} pts...`}
             </strong>
           </span>
         </div>
@@ -203,8 +207,8 @@ export const FinalRevealScreen: React.FC<FinalRevealScreenProps> = ({
             <span className="tabular-nums font-black">
               {showTaste ? (
                 <>
-                  {p0Score?.tastePoints ?? 0} vs{' '}
-                  <strong className="text-[#1D7A4C]">{p1Score?.tastePoints ?? 0}</strong>
+                  <strong className={isP0Winner ? 'text-[#1D7A4C]' : undefined}>{p0Score?.tastePoints ?? 0}</strong> vs{' '}
+                  <strong className={isP1Winner ? 'text-[#1D7A4C]' : undefined}>{p1Score?.tastePoints ?? 0}</strong>
                 </>
               ) : (
                 '...'
@@ -275,9 +279,12 @@ export const FinalRevealScreen: React.FC<FinalRevealScreenProps> = ({
             <span className="tabular-nums">
               {showTotal ? (
                 <>
-                  {p0Score?.finalScore ?? 0} pts vs{' '}
-                  <strong className="text-base text-[#1D7A4C]">
-                    {p1Score?.finalScore ?? 0} pts
+                  <strong className={isP0Winner ? 'text-base text-[#1D7A4C]' : undefined}>
+                    {p0Score?.finalScore ?? 0} pts{isP0Winner ? ' 👑' : ''}
+                  </strong>
+                  {' vs '}
+                  <strong className={isP1Winner ? 'text-base text-[#1D7A4C]' : undefined}>
+                    {p1Score?.finalScore ?? 0} pts{isP1Winner ? ' 👑' : ''}
                   </strong>
                 </>
               ) : (

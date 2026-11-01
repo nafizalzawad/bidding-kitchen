@@ -165,6 +165,7 @@ export const LiveMatchContainer: React.FC = () => {
                 match={match}
                 myPlayerId={myPlayerId ?? ''}
                 countdownSeconds={countdownSeconds}
+                stateRemainingMs={remainingMs}
                 onLockBid={store.lockBid}
               />
             )}

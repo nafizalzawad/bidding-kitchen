@@ -12,7 +12,7 @@ export interface MatchIntroScreenProps {
 
 export const MatchIntroScreen: React.FC<MatchIntroScreenProps> = ({
   match,
-  countdownSeconds: _countdownSeconds = 3,
+  countdownSeconds = 3,
   onStartCooking,
 }) => {
   const p1 = match.players[0]!;
@@ -99,7 +99,7 @@ export const MatchIntroScreen: React.FC<MatchIntroScreenProps> = ({
           onClick={onStartCooking}
           icon={<Utensils className="w-5 h-5" />}
         >
-          Let's Cook! (Round 1: Bun)
+          Let's Cook! (Starting in {countdownSeconds}s...)
         </Button>
       </div>
     </div>
