@@ -238,7 +238,9 @@ export const StorybookHarnessScreen: React.FC<StorybookHarnessScreenProps> = ({
               activeKey === 'BIDDING_LOCKED_WAITING' ||
               activeKey === 'ROUND_RESOLVE_COLLISION' ||
               activeKey === 'ROUND_END_BREATHER' ||
-              activeKey === 'OPPONENT_DISCONNECTED' ? (
+              activeKey === 'OPPONENT_DISCONNECTED' ||
+              activeKey === 'V15_BISTRO_PIZZA_ORDER' ||
+              activeKey === 'V15_CHEFS_TABLE_STEAK_6ROUNDS' ? (
               <AuctionRoundScreen
                 match={stateData.match!}
                 myPlayerId={stateData.myPlayerId}

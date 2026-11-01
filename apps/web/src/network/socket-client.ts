@@ -180,6 +180,19 @@ export class SocketClient {
     return this.withTimeout((cb) => s.emit('post_match:new_tier', { roomCode, tier }, cb));
   }
 
+  public joinQueue(
+    nickname: string,
+    tier: TierId,
+  ): Promise<AckResponse<{ ticketId: string }>> {
+    const s = this.getSocket();
+    return this.withTimeout((cb) => s.emit('queue:join', { nickname, tier }, cb));
+  }
+
+  public leaveQueue(ticketId: string): Promise<AckResponse> {
+    const s = this.getSocket();
+    return this.withTimeout((cb) => s.emit('queue:leave', { ticketId }, cb));
+  }
+
   public trackTelemetry(
     event: TelemetryEventName,
     metadata?: Record<string, string | number | boolean>,

@@ -1,5 +1,7 @@
 import {
   STREET_INGREDIENTS,
+  BISTRO_INGREDIENTS,
+  CHEFS_TABLE_INGREDIENTS,
   CUSTOMER_ORDERS,
   COMBOS,
   type PublicMatchView,
@@ -27,7 +29,9 @@ export type HarnessStateKey =
   | 'FINAL_REVEAL'
   | 'POST_MATCH'
   | 'OPPONENT_DISCONNECTED'
-  | 'ERROR_EMPTY_STATE';
+  | 'ERROR_EMPTY_STATE'
+  | 'V15_BISTRO_PIZZA_ORDER'
+  | 'V15_CHEFS_TABLE_STEAK_6ROUNDS';
 
 export interface HarnessStateData {
   key: HarnessStateKey;
@@ -695,6 +699,214 @@ export const MOCK_HARNESS_STATES: Record<HarnessStateKey, HarnessStateData> = {
     error: {
       code: 'ROOM_NOT_FOUND',
       message: 'Kitchen room "BURG42" was not found or has expired. Please check the code and try again.',
+    },
+  },
+
+  V15_BISTRO_PIZZA_ORDER: {
+    key: 'V15_BISTRO_PIZZA_ORDER',
+    label: '15. v1.5 Bistro $30 Pizza & Secret Customer Order',
+    myPlayerId: 'p1',
+    opponentPlayerId: 'p2',
+    match: {
+      id: 'match_v15_bistro',
+      roomCode: 'PIZZ42',
+      tier: 'BISTRO',
+      state: 'BIDDING',
+      config: streetConfig,
+      roundIndex: 2,
+      myPlayerId: 'p1',
+      players: [
+        {
+          id: 'p1',
+          nickname: 'ChefMarco',
+          seat: 0,
+          ready: true,
+          connected: true,
+          disconnectedAt: null,
+          budget: 20,
+          dish: [
+            {
+              roundIndex: 0,
+              slot: 'DOUGH',
+              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_dough_woodfired')!,
+              pricePaid: 7,
+              wonVia: 'UNCONTESTED',
+            },
+            {
+              roundIndex: 1,
+              slot: 'PIZZA_SAUCE',
+              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_sauce_marinara')!,
+              pricePaid: 3,
+              wonVia: 'UNCONTESTED',
+            },
+          ],
+          secretOrder: CUSTOMER_ORDERS[0]!,
+          chefsTipGranted: false,
+        },
+        {
+          id: 'p2',
+          nickname: 'ChefLuigi',
+          seat: 1,
+          ready: true,
+          connected: true,
+          disconnectedAt: null,
+          budget: 24,
+          dish: [
+            {
+              roundIndex: 0,
+              slot: 'DOUGH',
+              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_dough_regular')!,
+              pricePaid: 0,
+              wonVia: 'FALLBACK_LOSS',
+            },
+            {
+              roundIndex: 1,
+              slot: 'PIZZA_SAUCE',
+              ingredient: BISTRO_INGREDIENTS.find((i) => i.id === 'bistro_sauce_arrabbiata')!,
+              pricePaid: 4,
+              wonVia: 'UNCONTESTED',
+            },
+          ],
+          secretOrder: null,
+          chefsTipGranted: false,
+        },
+      ],
+      currentRound: {
+        roundIndex: 2,
+        slot: 'PIZZA_CHEESE',
+        availableIngredients: BISTRO_INGREDIENTS.filter((i) => i.slot === 'PIZZA_CHEESE'),
+        bidsLockedByPlayer: { p1: false, p2: false },
+        myLockedBid: null,
+        resolution: null,
+        startedAt: Date.now() - 3000,
+        deadlineAt: Date.now() + 12000,
+      },
+      remainingStock: {},
+      result: null,
+      serverNow: Date.now(),
+      stateEnteredAt: Date.now() - 3000,
+      stateDeadlineAt: Date.now() + 12000,
+    },
+  },
+
+  V15_CHEFS_TABLE_STEAK_6ROUNDS: {
+    key: 'V15_CHEFS_TABLE_STEAK_6ROUNDS',
+    label: "16. v1.5 Chef's Table $40 Steak Dinner & Chef's Tip (+6 Rnds)",
+    myPlayerId: 'p1',
+    opponentPlayerId: 'p2',
+    match: {
+      id: 'match_v15_steak',
+      roomCode: 'STEK99',
+      tier: 'CHEFS_TABLE',
+      state: 'RESOLVE',
+      config: streetConfig,
+      roundIndex: 2,
+      myPlayerId: 'p1',
+      players: [
+        {
+          id: 'p1',
+          nickname: 'ChefAntoine',
+          seat: 0,
+          ready: true,
+          connected: true,
+          disconnectedAt: null,
+          budget: 24, // $40 starting - $18 spent + $2 tip = $24
+          dish: [
+            {
+              roundIndex: 0,
+              slot: 'CUT',
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_cut_a5_wagyu')!,
+              pricePaid: 13,
+              wonVia: 'UNCONTESTED',
+            },
+            {
+              roundIndex: 1,
+              slot: 'SIDE',
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_side_pommes_frites')!,
+              pricePaid: 5,
+              wonVia: 'UNCONTESTED',
+            },
+          ],
+          secretOrder: CUSTOMER_ORDERS[1]!,
+          chefsTipGranted: true,
+        },
+        {
+          id: 'p2',
+          nickname: 'ChefGordon',
+          seat: 1,
+          ready: true,
+          connected: true,
+          disconnectedAt: null,
+          budget: 31,
+          dish: [
+            {
+              roundIndex: 0,
+              slot: 'CUT',
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_cut_sirloin')!,
+              pricePaid: 0,
+              wonVia: 'FALLBACK_LOSS',
+            },
+            {
+              roundIndex: 1,
+              slot: 'SIDE',
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_side_lobster_mash')!,
+              pricePaid: 9,
+              wonVia: 'UNCONTESTED',
+            },
+          ],
+          secretOrder: null,
+          chefsTipGranted: false,
+        },
+      ],
+      currentRound: {
+        roundIndex: 2,
+        slot: 'STEAK_SAUCE',
+        availableIngredients: CHEFS_TABLE_INGREDIENTS.filter((i) => i.slot === 'STEAK_SAUCE'),
+        bidsLockedByPlayer: { p1: true, p2: true },
+        myLockedBid: {
+          playerId: 'p1',
+          roundIndex: 2,
+          ingredientId: 'chef_sauce_peppercorn',
+          amount: 4,
+          lockedAt: Date.now() - 5000,
+          isAutoTimeoutBid: false,
+        },
+        resolution: {
+          roundIndex: 2,
+          slot: 'STEAK_SAUCE',
+          outcomeType: 'NO_COLLISION',
+          bidsByPlayer: {
+            p1: { playerId: 'p1', roundIndex: 2, ingredientId: 'chef_sauce_peppercorn', amount: 4, lockedAt: Date.now() - 5000, isAutoTimeoutBid: false },
+            p2: { playerId: 'p2', roundIndex: 2, ingredientId: 'chef_sauce_chimichurri', amount: 3, lockedAt: Date.now() - 4000, isAutoTimeoutBid: false },
+          },
+          awardsByPlayer: {
+            p1: {
+              roundIndex: 2,
+              slot: 'STEAK_SAUCE',
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_sauce_peppercorn')!,
+              pricePaid: 4,
+              wonVia: 'UNCONTESTED',
+            },
+            p2: {
+              roundIndex: 2,
+              slot: 'STEAK_SAUCE',
+              ingredient: CHEFS_TABLE_INGREDIENTS.find((i) => i.id === 'chef_sauce_chimichurri')!,
+              pricePaid: 3,
+              wonVia: 'UNCONTESTED',
+            },
+          },
+          chefsTipAwardedToPlayerId: 'p1',
+          budgetsBeforeRound: { p1: 22, p2: 34 },
+          budgetsAfterRound: { p1: 24, p2: 31 },
+        },
+        startedAt: Date.now() - 8000,
+        deadlineAt: Date.now() + 2000,
+      },
+      remainingStock: {},
+      result: null,
+      serverNow: Date.now(),
+      stateEnteredAt: Date.now() - 1000,
+      stateDeadlineAt: Date.now() + 2000,
     },
   },
 };

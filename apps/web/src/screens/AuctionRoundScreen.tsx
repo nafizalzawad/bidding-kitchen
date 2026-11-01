@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   PublicMatchView,
   Ingredient,
+  TIERS,
   getResolutionCueForPlayer,
 } from '@bidding-kitchen/shared';
 import { TimerBar } from '../components/ui/TimerBar.js';
 import { BudgetBar } from '../components/ui/BudgetBar.js';
 import { OpponentStatusHeader } from '../components/game/OpponentStatusHeader.js';
 import { DishVisualizer } from '../components/game/DishVisualizer.js';
+import { CustomerOrderBanner } from '../components/game/CustomerOrderBanner.js';
+import { ChefsTipBanner } from '../components/game/ChefsTipBanner.js';
 import { IngredientCard } from '../components/game/IngredientCard.js';
 import { BidControls } from '../components/game/BidControls.js';
 import { BidFlipCompare } from '../components/game/BidFlipCompare.js';
@@ -248,12 +251,24 @@ export const AuctionRoundScreen: React.FC<AuctionRoundScreenProps> = ({
         <TimerBar timeRemainingMs={timeRemainingMs} />
       </div>
 
+      {/* Customer Secret Order Objective */}
+      <CustomerOrderBanner order={me.secretOrder} dish={me.dish} />
+
+      {/* Chef's Tip Celebration Banner */}
+      <ChefsTipBanner
+        awardedToMe={Boolean(
+          currentRound?.resolution?.chefsTipAwardedToPlayerId === me.id ||
+          (isResolve && currentRound?.roundIndex === 2 && me.chefsTipGranted)
+        )}
+      />
+
       {/* 3. Dish Visualizer Canvas (Reserved min-height to prevent layout shift) */}
       <div className="shrink-0">
         <DishVisualizer
           dish={me.dish}
+          tier={match.tier}
           chefName={me.nickname}
-          dishName={`Your Burger (${me.dish.length}/5 Layers)`}
+          dishName={`Your Dish (${me.dish.length}/${TIERS[match.tier].roundsCount} Courses)`}
           elapsedMs={isResolve ? effectiveElapsedMs : undefined}
           dishSlapPhase={isResolve ? animPhase.dishSlapPhase : undefined}
         />

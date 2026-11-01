@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TIERS, type PublicMatchView } from '@bidding-kitchen/shared';
+import { TIERS, type PublicMatchView, type TierId } from '@bidding-kitchen/shared';
 import { Button } from '../components/ui/Button.js';
 import { Card } from '../components/ui/Card.js';
 import { Toast } from '../components/ui/Toast.js';
@@ -10,6 +10,7 @@ export interface LobbyScreenProps {
   myPlayerId: string;
   isSubmitting?: boolean;
   onToggleReady?: () => void;
+  onSelectTier?: (tier: TierId) => void;
   onLeaveLobby?: () => void;
   onCopyInviteLink?: () => void;
 }
@@ -19,6 +20,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
   myPlayerId,
   isSubmitting = false,
   onToggleReady,
+  onSelectTier,
   onLeaveLobby,
   onCopyInviteLink,
 }) => {
@@ -184,6 +186,24 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
         <p className="text-xs text-[#57514A] font-medium leading-relaxed">
           Culinary Slots: {tierDef.slots.join(' → ')}.
         </p>
+
+        {p0?.id === myPlayerId && !p0?.ready && (
+          <div className="grid grid-cols-3 gap-1.5 mt-2 pt-2 border-t border-[#F4EFE2]" data-testid="lobby-tier-picker">
+            {(['STREET', 'BISTRO', 'CHEFS_TABLE'] as TierId[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                data-testid={`lobby-select-tier-${t.toLowerCase()}`}
+                onClick={() => onSelectTier?.(t)}
+                className={`py-1 px-2 rounded-lg text-[10px] font-black uppercase border border-[#1E1B18] transition cursor-pointer ${
+                  match.tier === t ? 'bg-[#FFB703] shadow-xs' : 'bg-white hover:bg-[#F4EFE2]'
+                }`}
+              >
+                {t === 'CHEFS_TABLE' ? 'Steak' : t === 'BISTRO' ? 'Pizza' : 'Burger'}
+              </button>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Action Buttons: Ready Up / Start Match & Leave */}

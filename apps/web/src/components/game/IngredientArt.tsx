@@ -357,7 +357,379 @@ export const IngredientArt: React.FC<IngredientArtProps> = ({
         </svg>
       );
 
-    default:
+    // ==========================================
+    // BISTRO PIZZA (19 Variants)
+    // ==========================================
+    // --- DOUGH ---
+    case 'bistro_dough_regular':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="22" fill="#FDE68A" stroke="#1E1B18" strokeWidth="3" />
+          <circle cx="32" cy="32" r="16" fill="#FEF3C7" stroke="#E5A65E" strokeWidth="2" strokeDasharray="3 3" />
+        </svg>
+      );
+    case 'bistro_dough_crispy':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="23" fill="#D97706" stroke="#1E1B18" strokeWidth="3" />
+          <circle cx="32" cy="32" r="18" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
+          <path d="M20 28L26 34M36 22L42 28M24 40L30 44" stroke="#78350F" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    case 'bistro_dough_sourdough':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="23" fill="#F5D0A9" stroke="#1E1B18" strokeWidth="3" />
+          <circle cx="32" cy="32" r="17" fill="#FDE8D0" stroke="#1E1B18" strokeWidth="1.5" />
+          <circle cx="25" cy="24" r="3" fill="#E5B287" />
+          <circle cx="38" cy="36" r="4" fill="#E5B287" />
+        </svg>
+      );
+    case 'bistro_dough_woodfired':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="23" fill="#B45309" stroke="#1E1B18" strokeWidth="3" />
+          <circle cx="32" cy="32" r="17" fill="#FBBF24" stroke="#78350F" strokeWidth="2" />
+          <circle cx="16" cy="26" r="3" fill="#1E1B18" />
+          <circle cx="44" cy="22" r="2.5" fill="#1E1B18" />
+          <circle cx="32" cy="46" r="3.5" fill="#1E1B18" />
+        </svg>
+      );
+
+    // --- PIZZA SAUCE ---
+    case 'bistro_sauce_garlic':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="20" fill="#FEF9C3" stroke="#1E1B18" strokeWidth="2.5" />
+          <path d="M22 30C26 24 38 24 42 30C40 38 24 38 22 30Z" fill="#FACC15" stroke="#CA8A04" strokeWidth="1.5" />
+          <circle cx="28" cy="30" r="3" fill="#FFFFFF" stroke="#1E1B18" strokeWidth="1" />
+        </svg>
+      );
+    case 'bistro_sauce_marinara':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="21" fill="#DC2626" stroke="#1E1B18" strokeWidth="3" />
+          <circle cx="26" cy="26" r="2" fill="#EF4444" />
+          <circle cx="38" cy="34" r="2.5" fill="#EF4444" />
+          <circle cx="30" cy="38" r="1.5" fill="#15803D" />
+        </svg>
+      );
+    case 'bistro_sauce_arrabbiata':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="21" fill="#991B1B" stroke="#1E1B18" strokeWidth="3" />
+          <path d="M20 32C24 20 40 20 44 32C40 44 24 44 20 32Z" fill="#B91C1C" />
+          <polygon points="28,24 30,28 26,28" fill="#FACC15" />
+          <polygon points="36,36 38,40 34,40" fill="#FACC15" />
+        </svg>
+      );
+    case 'bistro_sauce_truffle':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="21" fill="#E2E8F0" stroke="#1E1B18" strokeWidth="3" />
+          <circle cx="32" cy="32" r="16" fill="#F8FAFC" />
+          <circle cx="24" cy="26" r="2" fill="#1E293B" />
+          <circle cx="36" cy="24" r="2.5" fill="#1E293B" />
+          <circle cx="30" cy="38" r="2" fill="#1E293B" />
+          <circle cx="40" cy="36" r="1.5" fill="#1E293B" />
+        </svg>
+      );
+
+    // --- PIZZA CHEESE ---
+    case 'bistro_cheese_parm':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="20" fill="#FEF3C7" stroke="#1E1B18" strokeWidth="2.5" strokeDasharray="4 2" />
+          <circle cx="22" cy="24" r="1.5" fill="#D97706" />
+          <circle cx="32" cy="20" r="1.5" fill="#D97706" />
+          <circle cx="42" cy="26" r="1.5" fill="#D97706" />
+          <circle cx="28" cy="38" r="1.5" fill="#D97706" />
+        </svg>
+      );
+    case 'bistro_cheese_mozzarella':
+      return (
+        <svg {...commonProps}>
+          <circle cx="24" cy="28" r="9" fill="#FFFDF7" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="40" cy="36" r="10" fill="#FFFDF7" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="34" cy="22" r="7" fill="#F8FAFC" stroke="#1E1B18" strokeWidth="2" />
+        </svg>
+      );
+    case 'bistro_cheese_provolone':
+      return (
+        <svg {...commonProps}>
+          <path d="M16 28C22 20 42 20 48 28C44 42 20 42 16 28Z" fill="#FDE68A" stroke="#1E1B18" strokeWidth="3" />
+          <path d="M22 30C28 26 36 26 42 30" stroke="#D97706" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    case 'bistro_cheese_burrata':
+      return (
+        <svg {...commonProps}>
+          <path d="M20 40C16 32 20 22 32 22C44 22 48 32 44 40C38 46 26 46 20 40Z" fill="#FFFFFF" stroke="#1E1B18" strokeWidth="3" />
+          <path d="M28 22C28 16 36 16 36 22" stroke="#1E1B18" strokeWidth="2.5" fill="#15803D" />
+          <circle cx="32" cy="34" r="5" fill="#FEF3C7" />
+        </svg>
+      );
+
+    // --- MAIN TOPPING ---
+    case 'bistro_topping_herbs':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="18" fill="none" stroke="#1E1B18" strokeWidth="1.5" strokeDasharray="3 3" />
+          <circle cx="22" cy="24" r="2" fill="#16A34A" />
+          <circle cx="38" cy="22" r="2.5" fill="#15803D" />
+          <circle cx="28" cy="38" r="2" fill="#15803D" />
+          <circle cx="42" cy="36" r="2" fill="#16A34A" />
+        </svg>
+      );
+    case 'bistro_topping_pepperoni':
+      return (
+        <svg {...commonProps}>
+          <circle cx="22" cy="26" r="8" fill="#B91C1C" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="42" cy="24" r="7.5" fill="#B91C1C" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="32" cy="40" r="8.5" fill="#B91C1C" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="22" cy="26" r="5" fill="#DC2626" />
+          <circle cx="42" cy="24" r="4.5" fill="#DC2626" />
+          <circle cx="32" cy="40" r="5.5" fill="#DC2626" />
+        </svg>
+      );
+    case 'bistro_topping_sausage':
+      return (
+        <svg {...commonProps}>
+          <rect x="18" y="22" width="10" height="8" rx="4" fill="#78350F" stroke="#1E1B18" strokeWidth="2" />
+          <rect x="36" y="20" width="12" height="9" rx="4.5" fill="#78350F" stroke="#1E1B18" strokeWidth="2" />
+          <rect x="24" y="36" width="14" height="10" rx="5" fill="#78350F" stroke="#1E1B18" strokeWidth="2" />
+          <circle cx="23" cy="26" r="1.5" fill="#D97706" />
+          <circle cx="31" cy="41" r="2" fill="#D97706" />
+        </svg>
+      );
+    case 'bistro_topping_prosciutto':
+      return (
+        <svg {...commonProps}>
+          <path d="M14 26C20 18 36 22 46 20C52 28 44 38 34 36C22 42 12 34 14 26Z" fill="#F43F5E" stroke="#1E1B18" strokeWidth="2.5" />
+          <path d="M18 28C26 24 38 28 44 24" stroke="#FDA4AF" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+
+    // --- FINISH ---
+    case 'bistro_finish_none':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="20" fill="none" stroke="#E2E8F0" strokeWidth="2" strokeDasharray="4 4" />
+        </svg>
+      );
+    case 'bistro_finish_basil':
+      return (
+        <svg {...commonProps}>
+          <path d="M20 36C18 26 28 20 36 24C38 34 28 40 20 36Z" fill="#22C55E" stroke="#1E1B18" strokeWidth="2.5" />
+          <path d="M30 42C34 32 44 30 48 36C46 44 38 46 30 42Z" fill="#16A34A" stroke="#1E1B18" strokeWidth="2.5" />
+          <path d="M26 30C30 28 32 30 34 32" stroke="#DCFCE7" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      );
+    case 'bistro_finish_honey':
+      return (
+        <svg {...commonProps}>
+          <path d="M18 20C28 28 36 16 46 24C42 34 24 38 18 20Z" fill="#F59E0B" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="32" cy="26" r="2" fill="#DC2626" />
+          <circle cx="26" cy="30" r="1.5" fill="#DC2626" />
+          <circle cx="40" cy="22" r="1.5" fill="#DC2626" />
+        </svg>
+      );
+
+    // ==========================================
+    // CHEF'S TABLE STEAK DINNER (23 Variants)
+    // ==========================================
+    // --- CUT ---
+    case 'chef_cut_sirloin':
+      return (
+        <svg {...commonProps}>
+          <rect x="14" y="20" width="36" height="24" rx="8" fill="#78350F" stroke="#1E1B18" strokeWidth="3" />
+          <path d="M20 22L30 42M30 22L40 42" stroke="#451A03" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      );
+    case 'chef_cut_flatiron':
+      return (
+        <svg {...commonProps}>
+          <path d="M14 26C18 18 44 18 50 26C52 38 46 44 14 40Z" fill="#451A03" stroke="#1E1B18" strokeWidth="3" />
+          <path d="M22 24L36 38M32 22L44 34" stroke="#1E1B18" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    case 'chef_cut_ribeye':
+      return (
+        <svg {...commonProps}>
+          <path d="M12 28C14 18 36 16 48 24C54 36 44 46 20 44C12 40 10 34 12 28Z" fill="#581C87" stroke="#1E1B18" strokeWidth="3" />
+          <circle cx="28" cy="30" r="5" fill="#FBCFE8" stroke="#1E1B18" strokeWidth="1.5" />
+          <path d="M24 24L34 40M34 22L44 38" stroke="#3B0764" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      );
+    case 'chef_cut_a5_wagyu':
+      return (
+        <svg {...commonProps}>
+          <rect x="12" y="20" width="40" height="24" rx="6" fill="#881337" stroke="#1E1B18" strokeWidth="3" />
+          {/* Detailed white wagyu marbling */}
+          <path d="M16 26C22 24 28 32 36 28M24 38C30 34 38 40 46 36" stroke="#FFE4E6" strokeWidth="2" strokeLinecap="round" />
+          <path d="M20 22L32 42M32 22L44 42" stroke="#4C0519" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      );
+
+    // --- SIDE ---
+    case 'chef_side_roll':
+      return (
+        <svg {...commonProps}>
+          <ellipse cx="32" cy="34" rx="18" ry="12" fill="#FBBF24" stroke="#1E1B18" strokeWidth="3" />
+          <ellipse cx="32" cy="28" rx="10" ry="4" fill="#FDE68A" />
+        </svg>
+      );
+    case 'chef_side_asparagus':
+      return (
+        <svg {...commonProps}>
+          <rect x="16" y="22" width="32" height="6" rx="3" fill="#15803D" stroke="#1E1B18" strokeWidth="2" transform="rotate(-15 32 25)" />
+          <rect x="16" y="32" width="32" height="6" rx="3" fill="#16A34A" stroke="#1E1B18" strokeWidth="2" transform="rotate(-15 32 35)" />
+          <circle cx="44" cy="26" r="4" fill="#FACC15" stroke="#1E1B18" strokeWidth="1.5" />
+        </svg>
+      );
+    case 'chef_side_pommes_frites':
+      return (
+        <svg {...commonProps}>
+          <rect x="22" y="18" width="6" height="28" rx="2" fill="#FBBF24" stroke="#1E1B18" strokeWidth="2" transform="rotate(-10 25 32)" />
+          <rect x="30" y="16" width="6" height="30" rx="2" fill="#F59E0B" stroke="#1E1B18" strokeWidth="2" transform="rotate(5 33 31)" />
+          <rect x="38" y="20" width="6" height="26" rx="2" fill="#FBBF24" stroke="#1E1B18" strokeWidth="2" transform="rotate(18 41 33)" />
+        </svg>
+      );
+    case 'chef_side_lobster_mash':
+      return (
+        <svg {...commonProps}>
+          <ellipse cx="32" cy="36" rx="18" ry="10" fill="#FEF08A" stroke="#1E1B18" strokeWidth="2.5" />
+          {/* Lobster claw */}
+          <path d="M24 28C22 20 32 18 36 24C42 22 46 28 42 32C36 34 26 34 24 28Z" fill="#EF4444" stroke="#1E1B18" strokeWidth="2.5" />
+        </svg>
+      );
+
+    // --- STEAK SAUCE ---
+    case 'chef_sauce_jus':
+      return (
+        <svg {...commonProps}>
+          <path d="M16 32C24 24 40 24 48 32C42 42 22 42 16 32Z" fill="#3B1208" stroke="#1E1B18" strokeWidth="2.5" />
+          <ellipse cx="32" cy="32" rx="8" ry="3" fill="#5A2216" />
+        </svg>
+      );
+    case 'chef_sauce_chimichurri':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="18" fill="#15803D" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="26" cy="28" r="2" fill="#DC2626" />
+          <circle cx="38" cy="34" r="1.5" fill="#DC2626" />
+          <circle cx="32" cy="38" r="2" fill="#FEF08A" />
+        </svg>
+      );
+    case 'chef_sauce_peppercorn':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="18" fill="#D1D5DB" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="24" cy="26" r="2" fill="#1E1B18" />
+          <circle cx="38" cy="24" r="2" fill="#1E1B18" />
+          <circle cx="30" cy="38" r="2" fill="#1E1B18" />
+          <circle cx="40" cy="36" r="1.5" fill="#1E1B18" />
+        </svg>
+      );
+    case 'chef_sauce_bearnaise':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="32" r="18" fill="#FEF08A" stroke="#1E1B18" strokeWidth="2.5" />
+          <path d="M22 30C28 26 36 26 42 30" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+
+    // --- GARNISH ---
+    case 'chef_garnish_parsley':
+      return (
+        <svg {...commonProps}>
+          <path d="M30 46L32 26M32 26C26 22 22 28 28 32M32 26C38 20 44 26 38 30M32 20C28 14 36 14 32 20Z" stroke="#15803D" strokeWidth="3" fill="#22C55E" strokeLinejoin="round" />
+        </svg>
+      );
+    case 'chef_garnish_shallots':
+      return (
+        <svg {...commonProps}>
+          <path d="M18 24C24 18 36 32 44 26M22 36C30 30 40 42 46 34" stroke="#D97706" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    case 'chef_garnish_garlic':
+      return (
+        <svg {...commonProps}>
+          <circle cx="32" cy="34" r="14" fill="#FEF3C7" stroke="#1E1B18" strokeWidth="2.5" />
+          <path d="M32 20L32 26" stroke="#92400E" strokeWidth="2.5" />
+          <circle cx="28" cy="34" r="3" fill="#D97706" />
+          <circle cx="36" cy="34" r="3" fill="#D97706" />
+        </svg>
+      );
+    case 'chef_garnish_gold_caviar':
+      return (
+        <svg {...commonProps}>
+          <ellipse cx="32" cy="34" rx="14" ry="8" fill="#0F172A" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="28" cy="32" r="1" fill="#475569" />
+          <circle cx="34" cy="34" r="1" fill="#475569" />
+          {/* Gold leaf flecks */}
+          <polygon points="26,26 28,24 29,27 25,28" fill="#FACC15" />
+          <polygon points="36,28 39,26 38,29" fill="#FACC15" />
+        </svg>
+      );
+
+    // --- DRINK ---
+    case 'chef_drink_water':
+      return (
+        <svg {...commonProps}>
+          <rect x="22" y="16" width="20" height="32" rx="4" fill="#E0F2FE" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="28" cy="36" r="2" fill="#BAE6FD" />
+          <circle cx="34" cy="28" r="1.5" fill="#BAE6FD" />
+        </svg>
+      );
+    case 'chef_drink_spritz':
+      return (
+        <svg {...commonProps}>
+          <rect x="22" y="16" width="20" height="32" rx="4" fill="#FB923C" stroke="#1E1B18" strokeWidth="2.5" />
+          <circle cx="32" cy="20" r="5" fill="#FBBF24" stroke="#1E1B18" strokeWidth="1.5" />
+        </svg>
+      );
+    case 'chef_drink_cabernet':
+      return (
+        <svg {...commonProps}>
+          {/* Wine goblet */}
+          <path d="M22 18C22 30 42 30 42 18Z" fill="#881337" stroke="#1E1B18" strokeWidth="2.5" />
+          <line x1="32" y1="30" x2="32" y2="44" stroke="#1E1B18" strokeWidth="3" />
+          <line x1="24" y1="44" x2="40" y2="44" stroke="#1E1B18" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    case 'chef_drink_bourbon':
+      return (
+        <svg {...commonProps}>
+          {/* Rocks glass with giant cube */}
+          <rect x="20" y="22" width="24" height="24" rx="3" fill="#D97706" stroke="#1E1B18" strokeWidth="2.5" />
+          <rect x="25" y="27" width="14" height="14" fill="#FEF3C7" stroke="#92400E" strokeWidth="1.5" opacity="0.8" />
+        </svg>
+      );
+
+    // --- DESSERT ---
+    case 'chef_dessert_mint':
+      return (
+        <svg {...commonProps}>
+          <rect x="20" y="24" width="24" height="16" rx="4" fill="#3B1208" stroke="#1E1B18" strokeWidth="2.5" />
+          <path d="M26 32C28 26 36 26 38 32" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    case 'chef_dessert_sorbet':
+      return (
+        <svg {...commonProps}>
+          <ellipse cx="32" cy="36" rx="14" ry="6" fill="#E2E8F0" stroke="#1E1B18" strokeWidth="2" />
+          <circle cx="32" cy="26" r="10" fill="#EA580C" stroke="#1E1B18" strokeWidth="2.5" />
+        </svg>
+      );
+    case 'chef_dessert_brulee':
+      return (
+        <svg {...commonProps}>
+          <ellipse cx="32" cy="38" rx="18" ry="8" fill="#F8FAFC" stroke="#1E1B18" strokeWidth="2.5" />
+          <ellipse cx="32" cy="32" rx="16" ry="7" fill="#B45309" stroke="#1E1B18" strokeWidth="2.5" />
+          <ellipse cx="32" cy="31" rx="13" ry="5" fill="#D97706" />
+        </svg>
+      );
       return (
         <svg {...commonProps}>
           <circle cx="32" cy="32" r="24" fill="#F4EFE2" stroke="#1E1B18" strokeWidth="3" />

@@ -123,8 +123,13 @@ export const LiveMatchContainer: React.FC = () => {
               initialNickname={getSavedNickname() || 'Chef'}
               initialRoomCode={urlRoomCode}
               isSubmitting={isSubmittingAction}
+              selectedTier={storeState.selectedTier}
+              isSearchingMatch={storeState.isSearchingMatch}
+              onSelectTier={store.setSelectedTier}
               onCreateRoom={store.createRoom}
               onJoinRoom={store.joinRoom}
+              onQuickMatch={store.startQuickMatch}
+              onCancelQuickMatch={store.cancelQuickMatch}
             />
           )}
 
@@ -134,6 +139,7 @@ export const LiveMatchContainer: React.FC = () => {
               myPlayerId={myPlayerId ?? ''}
               isSubmitting={isSubmittingAction}
               onToggleReady={store.toggleReady}
+              onSelectTier={store.selectTier}
               onLeaveLobby={store.leaveToHome}
             />
           )}

@@ -3,6 +3,7 @@ import type {
   GameError,
   PublicMatchView,
   PublicPlayerView,
+  TierId,
 } from '@bidding-kitchen/shared';
 import {
   getMyPlayerFromView,
@@ -35,6 +36,9 @@ export interface MatchStoreState {
   isSubmittingAction: boolean;
   showTutorialOverlay: boolean;
   hasTrackedFirstBidInMatch: boolean;
+  isSearchingMatch: boolean;
+  matchTicketId: string | null;
+  selectedTier: TierId;
 }
 
 class MatchStore {
@@ -49,6 +53,9 @@ class MatchStore {
     isSubmittingAction: false,
     showTutorialOverlay: false,
     hasTrackedFirstBidInMatch: false,
+    isSearchingMatch: false,
+    matchTicketId: null,
+    selectedTier: 'STREET',
   };
 
   private listeners = new Set<() => void>();
@@ -249,16 +256,81 @@ class MatchStore {
     socket.on('server:error', ({ error }) => {
       this.setState({ activeError: error, isSubmittingAction: false });
     });
+
+    socket.on('queue:matched', ({ roomCode, playerId, reconnectToken, match }) => {
+      saveActiveSession({ roomCode, playerId, reconnectToken });
+      this.syncUrlRoom(roomCode);
+      const now = Date.now();
+      const clockOffsetMs = match.serverNow - now;
+      this.setState({
+        match,
+        myPlayerId: playerId,
+        clockOffsetMs,
+        isSearchingMatch: false,
+        matchTicketId: null,
+        isSubmittingAction: false,
+      });
+    });
   }
 
   // --- Actions ---
 
-  public createRoom = async (nickname: string): Promise<boolean> => {
+  public setSelectedTier = (tier: TierId): void => {
+    this.setState({ selectedTier: tier });
+  };
+
+  public selectTier = async (tier: TierId): Promise<boolean> => {
+    const { match } = this.state;
+    if (!match) return false;
+    this.setState({ isSubmittingAction: true, activeError: null });
+    const res = await socketClient.selectTier(match.roomCode, tier);
+    this.setState({ isSubmittingAction: false });
+    if (!res.ok) {
+      this.setState({ activeError: res.error });
+      return false;
+    }
+    return true;
+  };
+
+  public startQuickMatch = async (nickname: string, tier?: TierId): Promise<boolean> => {
+    const matchTier = tier ?? this.state.selectedTier;
+    this.setState({ isSubmittingAction: true, activeError: null });
+    saveNickname(nickname);
+
+    const res = await socketClient.joinQueue(nickname, matchTier);
+    this.setState({ isSubmittingAction: false });
+
+    if (res.ok) {
+      this.setState({
+        isSearchingMatch: true,
+        matchTicketId: res.ticketId,
+      });
+      return true;
+    } else {
+      this.setState({ activeError: res.error });
+      return false;
+    }
+  };
+
+  public cancelQuickMatch = async (): Promise<void> => {
+    const { matchTicketId } = this.state;
+    if (matchTicketId) {
+      await socketClient.leaveQueue(matchTicketId);
+    }
+    this.setState({
+      isSearchingMatch: false,
+      matchTicketId: null,
+      isSubmittingAction: false,
+    });
+  };
+
+  public createRoom = async (nickname: string, tier?: TierId): Promise<boolean> => {
     this.setState({ isSubmittingAction: true, activeError: null });
     saveNickname(nickname);
 
     try {
-      const res = await socketClient.createRoom(nickname, 'STREET');
+      const targetTier = tier ?? this.state.selectedTier;
+      const res = await socketClient.createRoom(nickname, targetTier);
       if (res.ok) {
         saveActiveSession({
           roomCode: res.roomCode,

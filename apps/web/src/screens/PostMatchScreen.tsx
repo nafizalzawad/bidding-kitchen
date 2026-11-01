@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button.js';
 import { Card } from '../components/ui/Card.js';
 import { Trophy, RefreshCw, Layers, Home, ChevronDown, ChevronUp, Swords, Share2 } from 'lucide-react';
 import { Toast } from '../components/ui/Toast.js';
+import { ShareCardCanvas } from '../components/game/ShareCardCanvas.js';
 
 export interface PostMatchScreenProps {
   match: PublicMatchView;
@@ -17,7 +18,7 @@ export interface PostMatchScreenProps {
 
 export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
   match,
-  myPlayerId: _myPlayerId,
+  myPlayerId,
   onRequestRematch,
   onNewTier,
   onReturnHome,
@@ -34,6 +35,7 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
   const p1Score = result?.scoresByPlayer[p1.id];
 
   const winner = (p0.id === result?.winnerId ? p0 : p1) ?? p1;
+  const myPlayer = match.players.find((p) => p && p.id === myPlayerId) ?? winner;
 
   const p0DishName = p0Score?.generatedDishName ?? generateDishName(p0.dish);
   const p1DishName = p1Score?.generatedDishName ?? generateDishName(p1.dish);
@@ -192,6 +194,13 @@ export const PostMatchScreen: React.FC<PostMatchScreenProps> = ({
           </div>
         )}
       </Card>
+
+      {/* Exportable 16:9 PNG Dish Card Canvas */}
+      <ShareCardCanvas
+        match={match}
+        player={myPlayer}
+        onDownloaded={onShare}
+      />
 
       {/* Action Buttons: Rematch, Change Tier, Return Home */}
       <div className="space-y-2.5 mt-auto pt-2">
